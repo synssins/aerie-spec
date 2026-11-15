@@ -55,7 +55,7 @@ A builder who needs an answer the contract doesn't give files it in `questions/`
 
 Phase 1 of the roadmap is under way. First tasks:
 
-- [ ] Receive the as-is export of aerie's API from a build session and commit it as `contracts/aerie/openapi.yaml`
+- [x] Receive the as-is export of aerie's API from a build session and commit it as `contracts/aerie/openapi.yaml`
 - [x] Write the Data Center T1 behaviour specs: content, spaces, search and CQL, attachments, labels, versions, users
 - [x] Write `contracts/datacenter/openapi.yaml` for T1
 - [x] Write the storage format behaviour spec and the first samples
