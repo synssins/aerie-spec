@@ -129,8 +129,8 @@ When an administrator puts aerie into read-only mode, every write returns `405` 
 
 - `baseUrl` (string): the configured site URL.
 - `version` (string): the Data Center version aerie presents itself as. Aerie reports the highest Data Center version whose T1 surface it fully implements (configurable, default `9.2.4` until the T1 suite passes against later versions). Clients often branch on this value, so it must be a real Data Center version string, not aerie's own version.
-- `buildNumber` (integer) and `marketplaceBuildNumber` (integer): numbers consistent with that version. Aerie keeps a table mapping each presented version to its build number.
-- `buildDate` (string): an ISO 8601 date-time.
+- `buildNumber` (integer) and `marketplaceBuildNumber` (integer): numbers consistent with that version (question Q-0011). Both are settings. When unset, aerie derives each from the version as major x 1,000,000 + minor x 1,000 + patch, so `9.2.4` gives `9002004`. Derived numbers grow with the version, which is what clients that compare them rely on. They are not the vendor's own build numbers, which no ledgered source lists.
+- `buildDate` (string): an ISO 8601 date-time. A setting, default `2026-01-01T00:00:00.000Z`.
 
 The operation needs an authenticated caller; anonymous callers get `401`.
 

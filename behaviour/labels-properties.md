@@ -6,8 +6,8 @@ T1 covers labels on content. Space labels, label lists (`/rest/api/label/...`), 
 
 ## The label object
 
-- `prefix`: the label's namespace. `global` (shared by everyone, the default), `my` (personal to one user), `team` (shared within a team). Aerie refuses any other prefix on write with `400`.
-- `name`: lower-case text without whitespace. Aerie lower-cases names on write and refuses, with `400`, names that contain whitespace or any of `: ; , . ? & [ ] ( ) # ^ * @ ! < >`, or are longer than 255 characters. This character set is aerie's own choice; see open questions.
+- `prefix`: the label's namespace. `global` (shared by everyone, the default), `my` (personal to one user), `team` (shared within a team). In T1 aerie holds `global` labels only (question Q-0009): writing a `my` or `team` label gives `400`, listing with `prefix=my` or `prefix=team` alone gives an empty list, and CQL `label = my:name` matches nothing. Personal and team labels are T2. Any other prefix gives `400`.
+- `name`: lower-case text without whitespace. Aerie lower-cases names on write and refuses, with `400`, names that contain whitespace or any of `: ; , . ? & [ ] ( ) # ^ * @ ! < >`, or are longer than 50 characters (aerie's tag limit; the published sources set none). This character set is aerie's own choice; see open questions.
 - `id`: a string of digits, unique for each prefix and name pair on the site.
 - `label`: the name as the user sees it, which is `name` for `global` labels and `prefix:name` otherwise.
 
@@ -26,6 +26,7 @@ T1 covers labels on content. Space labels, label lists (`/rest/api/label/...`), 
 - Body: either one label object or an array of them. Each has `name` and optionally `prefix` (default `global`). A `name` written as `prefix:name` is split.
 - Adding a label already on the content is not an error and adds nothing.
 - An invalid name gives `400` and adds none of the labels in the request.
+- A content item holds at most 20 labels. A request that would add a 21st gives `400` and adds none (question Q-0009).
 - Result: `200` with the content's complete label list after the change, in the paged shape.
 - `403` when the caller may not edit the content.
 

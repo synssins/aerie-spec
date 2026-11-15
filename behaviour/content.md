@@ -11,7 +11,7 @@ Every piece of content has:
 - `id`: a string of decimal digits, unique across all content types on the site, never reused. How aerie assigns it, and the aerie UUID that is accepted in its place, are in `common.md` (Identifiers).
 - `type`: `page`, `blogpost`, `comment` or `attachment`.
 - `status`: `current` (live), `trashed` (in the space trash), `historical` (an older version, only seen when asking for a version), `draft` (an unpublished draft).
-- `title`: plain text, up to 255 characters. Comments have an empty title or a title derived from their parent; clients must not rely on it.
+- `title`: plain text, up to 200 characters (question Q-0013). A longer title gives `400`. Comments have an empty title or a title derived from their parent; clients must not rely on it.
 - Expandable fields: `space`, `history`, `version`, `ancestors`, `container`, `body`, `children`, `descendants`, `metadata`, `restrictions`, `operations`. Plus `extensions`, always present, holding type-specific values:
   - pages and blog posts: `position` (integer order among siblings, or absent when unordered),
   - comments: `location` (`footer`, `inline` or `resolved`),
@@ -49,7 +49,7 @@ Question Q-0002. Aerie's tree has two kinds of node. A **folder** holds other no
 `GET /rest/api/content/{id}`
 
 - Default expansion: `space`, `history`, `version`.
-- `status` (repeatable): which statuses to accept. Default `current`. If the content is in another status and that status is not listed, the response is `404`. Pass `status=trashed` to read trashed content, `status=any` for current or trashed.
+- `status` (repeatable): which statuses to accept. Default `current`. If the content is in another status and that status is not listed, the response is `404`. Pass `status=trashed` to read trashed content, `status=any` for current or trashed. Trashed content is visible only to callers who hold the space's bin right (question Q-0014); for anyone else it does not exist (`404`).
 - `version`: return that historical version instead of the current one. The response carries `status: historical` unless the number asked for is the current version. A version that does not exist gives `404`.
 - Draft content is readable only by its author (and by others it is shared with, T2).
 
@@ -111,9 +111,10 @@ Result: `200` with the updated content.
 `DELETE /rest/api/content/{id}`
 
 - A `current` page, blog post or comment is moved to the space trash: its status becomes `trashed`. Child pages are not trashed; they move up to the trashed page's parent. Comments on it stay with it.
-- A `trashed` item is deleted for good when the request also carries `status=trashed`. Without that parameter, deleting a trashed item gives `404`.
+- A `trashed` item is purged when the request also carries `status=trashed`. Without that parameter, deleting a trashed item gives `404`. Purging, restoring and reading trashed items need the space's bin right (question Q-0014), otherwise `403`.
+- What purged means (question Q-0016): the item leaves the space trash and every read of the compatible surface for good, and its id is never used again. Aerie's administrators' bin keeps it until an administrator empties that bin; that is the step that destroys the data. The purge is written to aerie's audit log.
 - Comments are never trashed: deleting one removes it for good, with its replies.
-- A `draft` is deleted for good when the request carries `status=draft`.
+- A `draft` is deleted for good when the request carries `status=draft`. Aerie has no unpublished drafts in T1, so this gives `404` (see What T1 leaves out).
 - Result: `204` with no body. (The published spec also lists `200`; aerie always uses `204`.)
 - `409` when the item cannot be removed in its current state, for example a page that another operation has locked.
 
@@ -127,6 +128,7 @@ The `version` object: `number` (integer), `when` (ISO 8601 date-time, UTC), `mes
 
 - Removes one historical version of a page or blog post. The current version cannot be removed: asking gives `400`. Comments do not support this: `400`.
 - Version numbers are not reused or shifted. After removing version 3 of 5, the remaining versions keep numbers 1, 2, 4, 5.
+- A removed version is gone from the compatible surface: it is not listed and cannot be read with `version=` (`404`). Aerie's own history, which only grows, keeps it, and the removal is written to the audit log (question Q-0016).
 - The caller needs permission to edit the content, otherwise `403`.
 - Result: `204`.
 
@@ -179,6 +181,15 @@ Child pages are ordered by `extensions.position` when set, then by title; other 
 `GET /rest/api/content/{id}/history/{version}/macro/hash/{hash}` is the older lookup by a render-time hash. Aerie computes the hash as the lowercase hex SHA-256 of the macro's storage markup and accepts it; clients that got a hash from a vendor renderer will get `404`. This is a known gap.
 
 ## What T1 leaves out
+
+Blog posts, comments and unpublished drafts (question Q-0007). Aerie holds none of them yet; each needs a new aerie data model. Until then the operations that touch them answer as follows:
+
+- Lists of blog posts and of comments are empty (`size: 0`), alone and inside `child`, `descendant` and space content maps.
+- Creating a blog post or a comment gives `400`. So does `status: draft` (or `status=draft`) on create.
+- Reading, updating or deleting with `status=draft` finds nothing: `404`.
+- Blog posts and comments are T2. Unpublished drafts are T3: an aerie draft is someone's unsaved edits to an existing page, not a new page, so the vendor's model maps onto it only with collaborative editing.
+
+Also left out:
 
 - Bulk page operations (`/rest/api/content/bulk/...`, since 10.2.20): T2.
 - Blueprint draft publishing (`/rest/api/content/blueprint/instance/{draftId}`): T3.

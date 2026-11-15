@@ -89,7 +89,7 @@ A field not in this table gives `400` with a message saying it is not supported.
 
 ## Values
 
-- Date values: `yyyy-MM-dd`, `yyyy/MM/dd`, `yyyy-MM-dd HH:mm` or `yyyy/MM/dd HH:mm`, quoted or not, read in the site's time zone. A date with no time means the start of that day. `created = 2026-03-03` matches the whole day.
+- Date values: `yyyy-MM-dd`, `yyyy/MM/dd`, `yyyy-MM-dd HH:mm` or `yyyy/MM/dd HH:mm`, quoted or not, read in the caller's time zone (question Q-0008). The published behaviour uses the caller's configured zone, falling back to the server's. Aerie has no per-user or site zone yet, so it uses UTC; once it gains one, that zone applies. A date with no time means the start of that day. `created = 2026-03-03` matches the whole day.
 - User values: a username or user key.
 - Content id values: decimal digits.
 
@@ -106,7 +106,7 @@ A field not in this table gives `400` with a message saying it is not supported.
 | `startOfYear(inc)`, `endOfYear(inc)` | dates | Start or end of this year, moved by `inc` |
 
 - `inc` is optional, quoted, and has the form sign, number, unit: `"-4w"`, `"+1d"`, `"2M"`. The sign defaults to `+`. Units: `y` year, `M` month, `w` week, `d` day, `h` hour, `m` minute.
-- Weeks start on the site's configured first day of the week (Monday by default in aerie).
+- Weeks start on Monday. Aerie has no first-day-of-week setting yet.
 
 Deferred to T2: `favouriteSpaces()`, `recentlyViewedContent(limit, offset)`, `recentlyViewedSpaces(limit)`.
 
@@ -118,7 +118,7 @@ Deferred to T2: `favouriteSpaces()`, `recentlyViewedContent(limit, offset)`, `re
 - Several words without quotes match items holding all of them, in any order.
 - A phrase in double quotes inside the value matches the words in that order: `text ~ "\"release notes\""`.
 - `?` matches one character and `*` any run of characters, inside a word but not at its start: `title ~ "rel*"`.
-- A word followed by `~` is matched loosely (spelling variations): `text ~ "colour~"`.
+- A word followed by `~` is matched loosely: `text ~ "colour~"`. In aerie a loose word matches any word of the item at most one letter away: one letter added, removed or changed (question Q-0008). The published sources do not say how loose a real server is.
 - Wildcards and `~` must sit inside a quoted value.
 
 ## Ordering

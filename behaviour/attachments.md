@@ -29,6 +29,7 @@ An attachment is content with `type: attachment` and these differences:
 `POST /rest/api/content/{id}/child/attachment`
 
 - `multipart/form-data` with the XSRF header from `common.md`.
+- The content may be a page or a folder (see the tree mapping in `content.md`); clients cannot tell them apart, so both accept attachments (question Q-0006).
 - One or more parts named `file`, each with a file name in its `Content-Disposition`. The part's `Content-Type` becomes the media type; when absent or `application/octet-stream`, aerie guesses from the file name.
 - Optional parts named `comment`: if any are sent, there must be one per file, in the same order; otherwise `400`.
 - Optional parts `minorEdit` (`true`/`false`) and `hidden` (`true`/`false`) apply to all files in the request.
@@ -59,7 +60,7 @@ An attachment is content with `type: attachment` and these differences:
 
 - Query parameters: `newContentId` (content to move to; omitted means stay), `newName` (new file name; omitted means keep). At least one is required, otherwise `400`.
 - Needs the XSRF header.
-- The target must be a current page or blog post the caller can add attachments to. A name clash at the target gives `400`.
+- The target must be a current page (an aerie page or folder) the caller can add attachments to. A name clash at the target gives `400`.
 - Result: `204`.
 
 ## Removing

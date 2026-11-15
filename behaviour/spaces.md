@@ -51,6 +51,8 @@ Aerie spaces have no home page (question Q-0004). A space's top-level pages and 
 
 `POST /rest/api/space` creates a global space. `POST /rest/api/space/_private` creates a global space only its creator can see.
 
+- Who sees the new space (question Q-0012): `POST /rest/api/space` makes it readable by everyone signed in (aerie's Signed in visibility), the closest match to a site whose default space permissions let all users view. `POST /rest/api/space/_private` makes it Private: only its creator, people and groups later given a role, and administrators.
+
 - Body: `key` (required), `name` (required), `description.plain.value` (optional, with `representation: plain`).
 - Key rules as above; a bad key gives `400`. A key already in use, in any case, gives `400`.
 - No page is created with the space. The creator gets full permissions on it.
@@ -61,6 +63,7 @@ Aerie spaces have no home page (question Q-0004). A space's top-level pages and 
 
 - Body: `description` (same shape as above) and `isPrivate` (boolean; the published model also lists `private` with the same meaning, so aerie reads either and `isPrivate` wins).
 - `409` when the caller already has a personal space. `403` when the caller may not have one.
+- In T1 only an administrator may create one; everyone else gets `403` (question Q-0010). The space is Private whatever `isPrivate` says. Its key is `~` followed by the owner's username in lower case, and its owner gets the Owner role. Personal spaces for every user, with visibility from `isPrivate`, are T2.
 - Result: `200` with the space.
 
 ## Updating
@@ -97,9 +100,9 @@ Aerie spaces have no home page (question Q-0004). A space's top-level pages and 
 
 ## Trash
 
-`GET /rest/api/space/{spaceKey}/trash` (since 9.5.1) lists the space's trashed content, newest-trashed first, with cursor paging (default `limit` 25). Needs space administration permission, otherwise `403`.
+`GET /rest/api/space/{spaceKey}/trash` (since 9.5.1) lists the space's trashed content, newest-trashed first, with cursor paging (default `limit` 25). Needs the space's bin right in aerie (question Q-0014), otherwise `403`.
 
-`DELETE /rest/api/space/{spaceKey}/trash` (since 9.5.1) purges everything in the space trash for good. Needs space administration permission. Result: `204`.
+`DELETE /rest/api/space/{spaceKey}/trash` (since 9.5.1) purges everything in the space trash, with the meaning of purge in `content.md` (question Q-0016). Needs the space's bin right, otherwise `403`. Result: `204`.
 
 ## Open questions
 
