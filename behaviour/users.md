@@ -10,7 +10,7 @@ Wherever a user appears (`version.by`, `history.createdBy`, space `creator`, the
 
 - `type`: `known` (a real account), `anonymous` (no one signed in), or `unknown` (an account that no longer exists, kept so old versions still name someone).
 - `username`: the login name. Absent for `anonymous`.
-- `userKey`: a stable opaque key that does not change when the username changes. Aerie uses a 32-character lower-case hex string. Absent for `anonymous`.
+- `userKey`: a stable opaque key that does not change when the username changes. Aerie uses the user's own id as 32 lower-case hex digits (see `common.md`, Identifiers). Absent for `anonymous`.
 - `displayName`: the full name to show.
 - `profilePicture`: `path` (relative to `_links.base`), `width`, `height`, `isDefault` (true when the user has no uploaded picture).
 - `_links.self`: the REST path of the user (`/rest/api/user?key=...`).

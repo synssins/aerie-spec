@@ -8,7 +8,7 @@ Covers pages, blog posts and comments through `/rest/api/content`: reading, list
 
 Every piece of content has:
 
-- `id`: a string of decimal digits, unique across all content types on the site, never reused. Aerie maps its own page ids to these at creation time; existing aerie pages get one on migration.
+- `id`: a string of decimal digits, unique across all content types on the site, never reused. How aerie assigns it, and the aerie UUID that is accepted in its place, are in `common.md` (Identifiers).
 - `type`: `page`, `blogpost`, `comment` or `attachment`.
 - `status`: `current` (live), `trashed` (in the space trash), `historical` (an older version, only seen when asking for a version), `draft` (an unpublished draft).
 - `title`: plain text, up to 255 characters. Comments have an empty title or a title derived from their parent; clients must not rely on it.
@@ -28,6 +28,21 @@ Notes on the expandable fields:
 - `metadata`: `labels` (a paged label list, see `labels-properties.md`) and, for attachments, `mediaType` and `comment`. Other keys are T2.
 - `operations`: what the caller may do, as a list of `{operation, targetType}` pairs, where `operation` is one of `read`, `update`, `delete`, `create` and `targetType` names the content type.
 - `restrictions`: read and update restriction summaries. Full restriction handling is T2 (`restrictions.md`); in T1, aerie returns the expandable keys `read` and `update` with empty restriction lists when the content has none.
+
+## How the page tree maps onto aerie's tree
+
+Question Q-0002. Aerie's tree has two kinds of node. A **folder** holds other nodes. A **page** holds none. Compatible clients expect any page to have child pages, so the surface maps the two like this:
+
+- Folders and pages both appear as `type: page`. Nothing on the compatible surface tells them apart.
+- A folder's body is its own content. A folder with no text has an empty storage body (`""`).
+- `extensions.position` is the node's place among its siblings in aerie's tree.
+- Children (`child`, `child/page`): for a folder, the nodes directly inside it, in aerie's sibling order. For a page, an empty list.
+- `ancestors`: the folders above the node, top first. A node at the top of the space has an empty list.
+- Descendants (`descendant/page` and its count): every node below a folder, depth-first in sibling order. A page has none.
+- CQL `parent` and `ancestor` follow the same mapping.
+- New content is created as an aerie page.
+- **A page that gains a child becomes a folder.** This happens when a page is created or moved with `ancestors` naming an aerie page. That page becomes a folder in place, then the new child goes inside it. It keeps its id, title, body, versions, labels and attachments. The change is recorded as an edit by the caller.
+- A folder stays a folder even when its last child is removed or moved out.
 
 ## Reading one item
 
@@ -65,7 +80,7 @@ Body fields aerie reads:
 - `type` (required): `page`, `blogpost` or `comment`. `attachment` gives `400`; attachments are created through the child attachment operation.
 - `title`: required for pages and blog posts. Two pages in one space may not share a title (case-insensitive): the second create gives `400`. Blog posts must have a unique title within their posting day and space.
 - `space.key`: required for pages and blog posts. Unknown space gives `404`. For comments, the space is taken from the container.
-- `ancestors`: optional, pages only. Only the last entry's `id` matters: it becomes the parent. The parent must be a `current` page in the same space, otherwise `400`. Without ancestors the page is created at the top of the space tree.
+- `ancestors`: optional, pages only. Only the last entry's `id` matters: it becomes the parent. The parent must be a `current` page in the same space, otherwise `400`. If the parent is an aerie page rather than a folder, it becomes a folder first (see the tree mapping above). Without ancestors the page is created at the top of the space tree.
 - `container`: required for comments: `{ "id": ..., "type": "page" | "blogpost" }`. To reply to a comment, set `ancestors` to the parent comment.
 - `body.storage.value` with `body.storage.representation: storage`, or `body.editor` with `representation: editor`. Other representations give `400`. Missing body means an empty body. See `representations.md` for what aerie accepts and stores.
 - `status`: `current` (default) or `draft`. The `status` query parameter means the same thing and wins if both are given.
@@ -82,7 +97,7 @@ Errors: `400` for missing or invalid fields, `403` when the caller may not add c
 
 - The body is a content object. `type` must match the stored type, otherwise `400`. `version.number` is required and must be exactly the current number plus one.
 - If `version.number` is not current + 1, the response is `409` and nothing changes, unless `conflictPolicy` says otherwise. The only value aerie supports is `abort` (the default); any other value gives `400`.
-- Fields that may change: `title`, `body` (pages, blog posts, comments), `ancestors` (moves a page under a new parent in the same space; moving across spaces gives `400` in T1), `status` (see below), `version.message` (a change note), `version.minorEdit` (when `true`, watchers are not notified).
+- Fields that may change: `title`, `body` (pages, blog posts, comments), `ancestors` (moves a page under a new parent in the same space, turning a parent page into a folder as above; moving across spaces gives `400` in T1), `status` (see below), `version.message` (a change note), `version.minorEdit` (when `true`, watchers are not notified).
 - Fields left out of the body are left unchanged; `body` left out keeps the current body.
 - Each successful update creates a new version and keeps the old one as `historical`.
 - `status` query parameter: the status the content has now. Default `current`. Use `status=trashed` with a body `status: current` to restore a trashed item; restoring does not create a new version.

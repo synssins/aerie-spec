@@ -7,12 +7,31 @@ Covers reading, listing, creating, updating, archiving, restoring and deleting s
 ## The space object
 
 - `id`: integer, unique on the site, never reused.
-- `key`: the short identifier clients use in paths, unique on the site and compared without regard to case. Aerie's rules: global space keys are ASCII letters and digits, up to 255 characters, stored upper-case; personal space keys are `~` followed by the owner's username (for example `~jdoe`). See open questions.
+- `key`: the short identifier clients use in paths, unique on the site. Global space keys follow the key rules below (question Q-0001). Personal space keys are `~` followed by the owner's username (for example `~jdoe`).
 - `name`: display name, up to 200 characters.
 - `type`: `global` (a site space) or `personal` (owned by one user).
 - `status`: `current` or `archived`.
 - `_links`: `self`, `webui`, and `collection` on single reads.
-- Expandable: `description` (holds `plain` and `view`, each `{value, representation}`; `plain` is what clients write), `homepage` (the space's home page as a short content object), `icon` (`path`, `width`, `height`, `isDefault`), `metadata` (holds `labels`, the space's own labels), `creator`, `creationDate`, `lastModifier`, `lastModificationDate`, `retentionPolicy` (T3; aerie returns it unexpanded only), `permissions` (T2).
+- Expandable: `description` (holds `plain` and `view`, each `{value, representation}`; `plain` is what clients write), `icon` (`path`, `width`, `height`, `isDefault`), `metadata` (holds `labels`, the space's own labels), `creator`, `creationDate`, `lastModifier`, `lastModificationDate`, `retentionPolicy` (T3; aerie returns it unexpanded only), `permissions` (T2).
+
+### Space keys
+
+Aerie's own space keys are 2 to 32 characters of lower-case letters, digits and hyphens. Compatible clients send and expect upper-case or mixed-case keys. The compatible surface maps between the two:
+
+- **Returned**: the aerie key in upper case. Aerie key `ops` is returned as `OPS`, and `team-a` as `TEAM-A`.
+- **Accepted**: any case, in paths, query parameters, bodies and CQL. Aerie lower-cases a key before it looks it up, so `OPS`, `Ops` and `ops` name the same space.
+- **Stored**: when a space is created through the compatible surface, aerie lower-cases the key, then applies its own key rules. A key that breaks them gives `400`; for example, a key of 33 or more characters, or one with an underscore. `LAB` is stored as `lab` and returned as `LAB`.
+- **Compared**: always without regard to case. Two keys that differ only in case are the same key, so creating the second one gives `400`.
+- A key is returned in upper case even when the client sent it in another case.
+
+### No home page
+
+Aerie spaces have no home page (question Q-0004). A space's top-level pages and folders are the nodes at the top of its tree.
+
+- `homepage` is never returned and is not listed in `_expandable`. Asking for it with `expand=homepage` (or a deeper path such as `homepage.body.storage`) is ignored, as for any unknown expansion.
+- Creating a space does not create a page.
+- `homepage` in a create or update body is ignored.
+- Clients that start from the home page to walk the tree should list the space's top level instead: `GET /rest/api/space/{spaceKey}/content/page?depth=root`.
 
 ## Reading one space
 
@@ -33,8 +52,8 @@ Covers reading, listing, creating, updating, archiving, restoring and deleting s
 `POST /rest/api/space` creates a global space. `POST /rest/api/space/_private` creates a global space only its creator can see.
 
 - Body: `key` (required), `name` (required), `description.plain.value` (optional, with `representation: plain`).
-- Key rules as above; a bad key gives `400`. A key already in use gives `400`.
-- The space is created with an empty home page titled after the space name. The creator gets full permissions on it.
+- Key rules as above; a bad key gives `400`. A key already in use, in any case, gives `400`.
+- No page is created with the space. The creator gets full permissions on it.
 - The caller needs the site permission to create spaces, otherwise `403`.
 - Result: `200` with the space.
 
@@ -48,7 +67,7 @@ Covers reading, listing, creating, updating, archiving, restoring and deleting s
 
 `PUT /rest/api/space/{spaceKey}`
 
-- Body: `name` (required), `key` (required; must match the path, the key cannot be changed: `400`), `description.plain.value` (optional), `homepage.id` (optional; must be a current page in this space, otherwise `400`).
+- Body: `name` (required), `key` (required; must match the path without regard to case, the key cannot be changed: `400`), `description.plain.value` (optional). `homepage` is ignored.
 - Requires space administration permission, otherwise `403`.
 - Result: `200` with the space.
 
@@ -84,7 +103,7 @@ Covers reading, listing, creating, updating, archiving, restoring and deleting s
 
 ## Open questions
 
-- The space key rules above (character set, length, upper-casing, the `~username` form for personal spaces) are aerie's choice; none of the sources read so far state them. The lab should record what real servers accept and return.
+- Aerie's keys may hold hyphens. No ledgered source says whether the vendor's keys may. A client that checks the characters of a returned key may reject `TEAM-A`. The lab should record whether common clients do.
+- The `~username` form for personal spaces is aerie's choice; none of the sources read so far state it.
 
 - Whether `GET /rest/api/space` without `status` returns archived spaces on real servers. Aerie returns both; to be confirmed by the lab.
-- What a real server names the home page created with a new space. Aerie uses the space name; clients should not depend on it.
