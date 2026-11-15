@@ -111,9 +111,17 @@ Errors use one body shape (`RestError` in the contract):
 | `statusCode` | integer | Same as the HTTP status |
 | `message` | string | A human-readable explanation, in aerie's words |
 | `reason` | string | The HTTP reason phrase, for example `Not Found` |
-| `data` | object | Optional. `valid` (boolean), `allowedInReadOnlyMode` (boolean), `successful` (boolean), `authorized` (boolean), `errors` (array of `{message: {key, args, translation}}`) |
+| `data` | object | Optional. `valid` (boolean), `allowedInReadOnlyMode` (boolean), `successful` (boolean), `authorized` (boolean), `errors` (array of `{message: ...}`, each a message object as in Message objects below) |
 
 Status codes used across the surface: `200`, `201` (not used by T1), `202` (long-running task accepted), `204`, `400` (bad parameter or body), `401`, `403`, `404`, `405` (write refused in read-only mode, aerie's choice), `409` (version or state conflict), `413` (upload too large), `415` (wrong content type), `500`.
+
+## Message objects
+
+Error details and long tasks describe things with a message object (`Message` in the contract). Question Q-0019.
+
+- `key` (string): a stable identifier for the kind of message, in aerie's own naming, for example `aerie.longtask.space.delete`. Clients may compare it; they should not show it.
+- `translation` (string): the full human-readable text, in aerie's words, with every value already filled in. For example: `Deleting space DS16`.
+- `args` (array): always present and always empty, `[]`. Every pinned published file declares the items of `args` as objects with no fields, so no item content would be the vendor's; an empty list is the only value that clients generated from every pinned version accept. The values a message is about are in `translation`.
 
 ## XSRF header
 
@@ -144,7 +152,7 @@ Some operations (space delete is the one in T1) start work that outlives the req
 
 `GET /rest/api/longtask` lists the tasks the caller started (administrators see all), newest first, offset-paged with default `limit` 100. `GET /rest/api/longtask/{id}` returns one `LongTaskStatus`:
 
-- `id`, `name` (a message object: `key`, `args`, `translation`), `elapsedTime` (milliseconds), `percentageComplete` (0 to 100), `successful` (boolean), `messages` (array of message objects), `_links`.
+- `id`, `name` (a message object, see Message objects: `args` is empty, the text is in `translation`), `elapsedTime` (milliseconds), `percentageComplete` (0 to 100), `successful` (boolean), `messages` (array of message objects), `_links`.
 - While the task runs, `successful` is `false` and `percentageComplete` is below 100. When it ends, `percentageComplete` is 100 and `successful` tells the outcome.
 - Aerie keeps finished task records for at least 24 hours. After that `GET /rest/api/longtask/{id}` may give `404`.
 - A caller who did not start the task and is not an administrator gets `404`.
