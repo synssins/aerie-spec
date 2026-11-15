@@ -1,0 +1,32 @@
+<h1>Greenhouse log</h1>
+<p>Readings are taken at <strong>07:00</strong> and <em>19:00</em> every day.</p>
+<h2>Checklist</h2>
+<ol>
+  <li>Open the <code>north</code> vent.</li>
+  <li>Check soil moisture
+    <ul>
+      <li>Tomatoes: keep damp</li>
+      <li>Cacti: leave dry</li>
+    </ul>
+  </li>
+</ol>
+<blockquote>
+  <p>Never water at noon in summer.</p>
+</blockquote>
+<table>
+  <tbody>
+    <tr>
+      <th>Bed</th>
+      <th>Crop</th>
+    </tr>
+    <tr>
+      <td>A</td>
+      <td>Basil &amp; thyme</td>
+    </tr>
+    <tr>
+      <td colspan="2">Bed B is resting this season.</td>
+    </tr>
+  </tbody>
+</table>
+<hr />
+<p style="text-align: center;">Last updated by the night shift.</p>

@@ -19,3 +19,7 @@ L-0017,Data Center: CQL field reference,https://developer.atlassian.com/server/c
 L-0018,Data Center: CQL function reference,https://developer.atlassian.com/server/confluence/cql-function-reference/,,2026-11-15,,spec-session-p1,CQL functions and the inc format
 L-0019,Data Center: performing text searches using CQL,https://developer.atlassian.com/server/confluence/performing-text-searches-using-cql/,,2026-11-15,,spec-session-p1,"text search syntax: phrases, wildcards, fuzzy"
 L-0020,Data Center storage format,https://confluence.atlassian.com/doc/confluence-storage-format-790796544.html,11.0,2026-11-15,,spec-session-p1,"storage format elements, attributes and allowed values"
+L-0021,Aerie sample: storage text blocks,samples/storage/01-text-blocks.xml,,2026-11-15,364010257f3d91fed10850009640b35bf60822911f46f41394c46cdde042eaf3,spec-session-p1,"our own sample, storage round trip"
+L-0022,Aerie sample: storage links and images,samples/storage/02-links-images.xml,,2026-11-15,b53817e9e5cb801f4ab62675d3654c70242344c3ba2ad53a62f1d77bb2dbabc9,spec-session-p1,"our own sample, storage round trip"
+L-0023,Aerie sample: storage tasks and layout,samples/storage/03-tasks-layout.xml,,2026-11-15,ac8e600be7e920fa805f819ecf085be223edd54a4244170f7a7c157b1a1870ca,spec-session-p1,"our own sample, storage round trip"
+L-0024,Aerie sample: storage macros and opaque nodes,samples/storage/04-macros-opaque.xml,,2026-11-15,8538260faf600ec6f84853ace5970017866d5c91e256fc95d25ccb37f5a93bff,spec-session-p1,"our own sample, storage round trip and opaque node"

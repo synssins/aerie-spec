@@ -1,0 +1,8 @@
+<p>See <ac:link><ri:page ri:content-title="Watering schedule" /><ac:plain-text-link-body><![CDATA[the watering schedule]]></ac:plain-text-link-body></ac:link> before changing anything.</p>
+<p>The same page in another space: <ac:link><ri:page ri:space-key="FARM" ri:content-title="Watering schedule" /></ac:link></p>
+<p>Supplier price list: <ac:link><ri:attachment ri:filename="prices-2026.pdf" /><ac:link-body>prices <em>(PDF)</em></ac:link-body></ac:link></p>
+<p>Jump to <ac:link ac:anchor="night-checks"><ac:plain-text-link-body><![CDATA[night checks]]></ac:plain-text-link-body></ac:link>.</p>
+<p>Questions go to <ac:link><ri:user ri:userkey="8a7f80e2915c4c3b0191a0c1d2e30004" /></ac:link>.</p>
+<p><ac:image ac:width="320" ac:alt="Seedling tray"><ri:attachment ri:filename="tray.png" /></ac:image></p>
+<p><ac:image ac:thumbnail="true"><ri:url ri:value="https://images.example.org/greenhouse/roof.jpg" /></ac:image></p>
+<p><a href="https://example.org/frost-dates">Frost dates</a></p>
