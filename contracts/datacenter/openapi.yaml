@@ -19,6 +19,8 @@ servers:
         default: http://localhost:8080
 security:
   - basic: []
+  - bearer: []
+  - oauth2: []
   - {}
 tags:
   - name: content
@@ -43,6 +45,8 @@ tags:
     description: Facts about the running build.
   - name: long-tasks
     description: Work that outlives a request.
+  - name: oauth2
+    description: OAuth 2.0 authorization, tokens and revocation.
 paths:
   /rest/api/content:
     get:
@@ -1431,8 +1435,226 @@ paths:
               schema: {$ref: '#/components/schemas/LongTaskStatus'}
         '401': {$ref: '#/components/responses/Unauthorized'}
         '404': {$ref: '#/components/responses/NotFound'}
+  /rest/oauth2/latest/authorize:
+    get:
+      tags: [oauth2]
+      operationId: oauth2Authorize
+      summary: Start an OAuth 2.0 authorization in the user's browser
+      description: >-
+        Opened by the user's browser, never called by a client in the background.
+        Aerie signs the user in if needed, shows consent, then redirects to
+        `redirect_uri` with `code` and `state`, or with `error`,
+        `error_description` and `state`. If `client_id` or `redirect_uri` is
+        not acceptable aerie shows an error page and does not redirect.
+        The published Data Center specs do not list this path; the provider
+        documentation places it in every version this contract covers.
+        See behaviour/identity.md.
+      x-aerie-sources: [L-0100, L-0101, L-0103, L-0108, L-0110, L-0113, L-0115]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      security: []
+      parameters:
+        - name: response_type
+          in: query
+          required: true
+          description: Must be `code`.
+          schema: {type: string, enum: [code]}
+        - name: client_id
+          in: query
+          required: true
+          description: The registered client.
+          schema: {type: string}
+        - name: redirect_uri
+          in: query
+          required: true
+          description: Must equal one of the client's registered redirect URIs exactly.
+          schema: {type: string}
+        - name: scope
+          in: query
+          required: true
+          description: Scope names separated by spaces, each allowed for the client.
+          schema: {type: string}
+          example: READ WRITE
+        - name: state
+          in: query
+          required: false
+          description: Returned unchanged on the redirect.
+          schema: {type: string}
+        - name: code_challenge
+          in: query
+          required: false
+          description: PKCE challenge. Required for public clients and for confidential clients with PKCE on (the default).
+          schema: {type: string, minLength: 43, maxLength: 128, pattern: '^[A-Za-z0-9._~-]+$'}
+        - name: code_challenge_method
+          in: query
+          required: false
+          description: '`S256`. `sha256` is read as the same method. `plain` is refused.'
+          schema: {type: string, enum: [S256, sha256]}
+      responses:
+        '302':
+          description: >-
+            A redirect: to aerie's sign-in or consent page, or back to
+            `redirect_uri` with the result as query parameters.
+          headers:
+            Location:
+              description: Where the browser goes next.
+              schema: {type: string}
+        '400':
+          description: >-
+            Unknown or disabled client, or a redirect URI that does not match.
+            An HTML error page for the user; nothing is sent to the client.
+          content:
+            text/html:
+              schema: {type: string}
+  /rest/oauth2/latest/token:
+    post:
+      tags: [oauth2]
+      operationId: oauth2Token
+      summary: Exchange an authorization code or a refresh token for tokens
+      description: >-
+        Parameters are read from the form body and, as the provider
+        documentation's examples send them, from the query string; the body
+        wins when both have one. Confidential clients authenticate with
+        `client_id` and `client_secret` parameters or with HTTP Basic. A
+        refresh invalidates the refresh token and the access token issued
+        with it and returns a new pair; presenting a rotated refresh token
+        again revokes the whole grant. The XSRF header is not needed here.
+        Responses carry `Cache-Control: no-store`. See behaviour/identity.md.
+      x-aerie-sources: [L-0100, L-0103, L-0105, L-0108, L-0110, L-0113]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      security:
+        - basic: []
+        - {}
+      parameters:
+        - {name: grant_type, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+        - {name: client_id, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+        - {name: client_secret, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+        - {name: code, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+        - {name: redirect_uri, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+        - {name: code_verifier, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+        - {name: refresh_token, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+        - {name: scope, in: query, required: false, description: Query-string form of the body field., schema: {type: string}}
+      requestBody:
+        required: false
+        content:
+          application/x-www-form-urlencoded:
+            schema: {$ref: '#/components/schemas/OAuthTokenRequest'}
+      responses:
+        '200':
+          description: New tokens.
+          headers:
+            Cache-Control:
+              description: Always `no-store`.
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OAuthTokenResponse'}
+        '400':
+          description: '`invalid_request`, `invalid_grant`, `unauthorized_client`, `unsupported_grant_type` or `invalid_scope`.'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OAuthError'}
+        '401':
+          description: '`invalid_client`. Carries `WWW-Authenticate: Basic` when the client used HTTP Basic.'
+          headers:
+            WWW-Authenticate:
+              description: Present when the client authenticated with HTTP Basic.
+              schema: {type: string}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OAuthError'}
+        '429':
+          description: Too many calls from this client or address. Body `temporarily_unavailable`.
+          headers:
+            Retry-After:
+              description: Seconds to wait.
+              schema: {type: integer}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OAuthError'}
+  /rest/oauth2/latest/revoke:
+    post:
+      tags: [oauth2]
+      operationId: oauth2Revoke
+      summary: Revoke a refresh or access token
+      description: >-
+        Aerie's own addition, following RFC 7009; vendor clients do not call
+        it. Revoking a refresh token revokes its whole grant. The answer is
+        `200` whether or not the token existed. See behaviour/identity.md.
+      x-aerie-sources: [L-0105, L-0111]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      x-aerie-extension: true
+      security:
+        - basic: []
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: {$ref: '#/components/schemas/OAuthRevokeRequest'}
+      responses:
+        '200':
+          description: Done, or there was nothing to revoke. Empty body.
+        '400':
+          description: '`invalid_request`.'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OAuthError'}
+        '401':
+          description: '`invalid_client`.'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OAuthError'}
+  /.well-known/oauth-authorization-server:
+    get:
+      tags: [oauth2]
+      operationId: oauth2Metadata
+      summary: OAuth 2.0 authorization server metadata
+      description: >-
+        Aerie's own addition, following RFC 8414. No authentication. With a
+        context prefix the document is served at the site root, as RFC 8414
+        section 3 places it. See behaviour/identity.md.
+      x-aerie-sources: [L-0112]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      x-aerie-extension: true
+      security: []
+      responses:
+        '200':
+          description: The metadata document.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/OAuthServerMetadata'}
 components:
   securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      description: >-
+        A personal access token (`kbt_...`) or an OAuth 2.0 access token
+        (`kbo_...`), in the Authorization header only. The same tokens are
+        also accepted in the password field of HTTP Basic. See
+        behaviour/identity.md.
+    oauth2:
+      type: oauth2
+      description: >-
+        OAuth 2.0 authorization code grant with PKCE. Access tokens are sent
+        with the `bearer` scheme. `GET` and `HEAD` need `READ`, other methods
+        need `WRITE`, operations marked `x-aerie-scope: ADMIN` need `ADMIN`;
+        the user's own permissions always apply on top. See
+        behaviour/identity.md.
+      flows:
+        authorizationCode:
+          authorizationUrl: /rest/oauth2/latest/authorize
+          tokenUrl: /rest/oauth2/latest/token
+          refreshUrl: /rest/oauth2/latest/token
+          scopes:
+            READ: View what the user can view, and the user's own profile.
+            WRITE: Also create, change and delete what the user can change. Implies READ.
+            ADMIN: Also site administration, for administrators. Implies READ and WRITE.
+            SYSTEM_ADMIN: The same as ADMIN in aerie. Implies READ, WRITE and ADMIN.
     basic:
       type: http
       scheme: basic
@@ -2205,3 +2427,60 @@ components:
         limit: {type: integer, format: int32}
         size: {type: integer, format: int32}
         _links: {$ref: '#/components/schemas/Links'}
+    OAuthTokenRequest:
+      type: object
+      x-aerie-sources: [L-0100, L-0108, L-0110]
+      required: [grant_type]
+      properties:
+        grant_type: {type: string, enum: [authorization_code, refresh_token]}
+        client_id: {type: string}
+        client_secret: {type: string, description: 'Confidential clients only, unless HTTP Basic is used.'}
+        code: {type: string, description: 'With `authorization_code`.'}
+        redirect_uri: {type: string, description: 'With `authorization_code` it must equal the one sent to authorize. With `refresh_token` it is optional.'}
+        code_verifier: {type: string, minLength: 43, maxLength: 128, pattern: '^[A-Za-z0-9._~-]+$', description: 'With `authorization_code` when PKCE was used.'}
+        refresh_token: {type: string, description: 'With `refresh_token`.'}
+        scope: {type: string, description: 'With `refresh_token`, an optional narrower set of scopes.'}
+    OAuthTokenResponse:
+      type: object
+      x-aerie-sources: [L-0100, L-0108]
+      required: [access_token, token_type, expires_in, refresh_token, created_at, scope]
+      properties:
+        access_token: {type: string, example: kbo_4f2Q9xV1sLr8TzA0mN6pYc3Hd7Kw5BuJ}
+        token_type: {type: string, enum: [bearer]}
+        expires_in: {type: integer, format: int32, example: 3600}
+        refresh_token: {type: string, example: kbr_9Gt2Lm7Qe4Wx1Zs8Np3Rv6Yb0Hc5Jd2Kf}
+        created_at: {type: integer, format: int64, description: 'Unix time in seconds when the tokens were issued.', example: 1794729600}
+        scope: {type: string, description: 'Granted scope names separated by spaces.', example: READ WRITE}
+    OAuthRevokeRequest:
+      type: object
+      x-aerie-sources: [L-0111]
+      required: [token]
+      properties:
+        token: {type: string}
+        token_type_hint: {type: string, enum: [access_token, refresh_token]}
+        client_id: {type: string}
+        client_secret: {type: string}
+    OAuthError:
+      type: object
+      x-aerie-sources: [L-0108]
+      required: [error]
+      properties:
+        error:
+          type: string
+          enum: [invalid_request, invalid_client, invalid_grant, unauthorized_client, unsupported_grant_type, invalid_scope, temporarily_unavailable]
+        error_description: {type: string, description: 'An explanation in aerie''s words.'}
+    OAuthServerMetadata:
+      type: object
+      x-aerie-sources: [L-0111, L-0112]
+      required: [issuer, authorization_endpoint, token_endpoint, response_types_supported]
+      properties:
+        issuer: {type: string}
+        authorization_endpoint: {type: string}
+        token_endpoint: {type: string}
+        revocation_endpoint: {type: string}
+        scopes_supported: {type: array, items: {type: string}}
+        response_types_supported: {type: array, items: {type: string}}
+        grant_types_supported: {type: array, items: {type: string}}
+        code_challenge_methods_supported: {type: array, items: {type: string}}
+        token_endpoint_auth_methods_supported: {type: array, items: {type: string}}
+        revocation_endpoint_auth_methods_supported: {type: array, items: {type: string}}

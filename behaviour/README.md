@@ -14,9 +14,11 @@ Planned files, in the order the roadmap needs them:
 | `labels-properties.md` | Labels with prefixes, content and space properties |
 | `users.md` | Reading users and the groups they are in |
 | `representations.md` | Storage format, ADF, view, the opaque node |
-| `identity.md` | OAuth 2.0, OIDC, LDAP, tokens, basic auth, scopes |
+| `identity.md` | OAuth 2.0, tokens, basic auth, scopes (OIDC and LDAP sign-in later). Build order in `identity-plan.md` |
 | `restrictions.md` | Page-level read and update restrictions |
 | `webhooks.md` | The event outbox and webhook delivery |
 | `migration.md` | The Data Center importer and what it preserves |
 
 Written so far (Data Center T1): `common.md`, `content.md`, `spaces.md`, `search-cql.md`, `attachments.md`, `labels-properties.md` (labels only), `users.md`, `representations.md` (storage format only). Each ends with the open questions the lab should settle.
+
+Identity (Data Center): `identity.md`, with the build plan `identity-plan.md`. It supersedes the provisional sign-in code ruling in `common.md`.

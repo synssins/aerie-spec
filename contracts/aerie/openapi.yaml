@@ -267,6 +267,81 @@ paths:
       security:
         - cookieAuth: []
       "x-kb-api-token": "closed"
+  "/api/v1/admin/auth/compat":
+    get:
+      tags:
+        - "admin"
+      operationId: "auth.compat.read"
+      description: "Not yet built. Administrators only. Sign-in settings for the compatible surfaces: password Basic on or off, plain http redirect URIs for test installs, OAuth 2.0 lifetimes. See behaviour/identity.md."
+      "x-kb-action": "auth.compat.read"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/CompatAuthSettingsDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    put:
+      tags:
+        - "admin"
+      operationId: "auth.compat.save"
+      description: "Not yet built. Administrators only. Saves the settings; values outside the allowed ranges are refused with 400. See behaviour/identity.md."
+      "x-kb-action": "auth.compat.save"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/CompatAuthSettingsDto"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/CompatAuthSettingsDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/admin/auth/local/disable":
     post:
       tags:
@@ -920,6 +995,251 @@ paths:
             "application/json":
               schema:
                 "$ref": "#/components/schemas/StorageTestDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/admin/oauth/clients":
+    get:
+      tags:
+        - "oauth-clients"
+      operationId: "oauth.client.list"
+      description: "Not yet built. Administrators only. Lists registered OAuth 2.0 clients. Secrets are never returned. See behaviour/identity.md."
+      "x-kb-action": "oauth.client.list"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                type: "array"
+                items:
+                  "$ref": "#/components/schemas/OAuthClientDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    post:
+      tags:
+        - "oauth-clients"
+      operationId: "oauth.client.create"
+      description: "Not yet built. Administrators only. Registers a client. The secret of a confidential client is in the answer once and never again. See behaviour/identity.md."
+      "x-kb-action": "oauth.client.create"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/OAuthClientRequest"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/OAuthClientCreatedDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/admin/oauth/clients/{id}":
+    get:
+      tags:
+        - "oauth-clients"
+      operationId: "oauth.client.read"
+      description: "Not yet built. Administrators only. Reads one client. See behaviour/identity.md."
+      "x-kb-action": "oauth.client.read"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/OAuthClientDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    put:
+      tags:
+        - "oauth-clients"
+      operationId: "oauth.client.update"
+      description: "Not yet built. Administrators only. Changes name, redirect URIs, scopes, PKCE and enabled. Removing a scope or disabling the client ends tokens that relied on it. See behaviour/identity.md."
+      "x-kb-action": "oauth.client.update"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/OAuthClientRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/OAuthClientDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    delete:
+      tags:
+        - "oauth-clients"
+      operationId: "oauth.client.delete"
+      description: "Not yet built. Administrators only. Deletes the client and revokes every grant and token issued to it. See behaviour/identity.md."
+      "x-kb-action": "oauth.client.delete"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/admin/oauth/clients/{id}/secret":
+    post:
+      tags:
+        - "oauth-clients"
+      operationId: "oauth.client.secret.rotate"
+      description: "Not yet built. Administrators only. Replaces the secret of a confidential client and returns the new one once. Existing tokens stay valid. See behaviour/identity.md."
+      "x-kb-action": "oauth.client.secret.rotate"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/OAuthClientCreatedDto"
         "401":
           description: "Not signed in, or a bad token"
         "403":
@@ -3633,6 +3953,81 @@ paths:
       security:
         - cookieAuth: []
       "x-kb-api-token": "closed"
+  "/api/v1/me/oauth/grants":
+    get:
+      tags:
+        - "me"
+      operationId: "oauth.grant.list"
+      description: "Not yet built. The signed-in user's connected applications: one entry per client the user consented to. See behaviour/identity.md."
+      "x-kb-action": "oauth.grant.list"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                type: "array"
+                items:
+                  "$ref": "#/components/schemas/OAuthGrantDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/me/oauth/grants/{id}":
+    delete:
+      tags:
+        - "me"
+      operationId: "oauth.grant.revoke"
+      description: "Not yet built. Revokes one of the signed-in user's grants and every token issued under it. See behaviour/identity.md."
+      "x-kb-action": "oauth.grant.revoke"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/me/settings":
     get:
       tags:
@@ -3795,6 +4190,96 @@ paths:
       responses:
         "204":
           description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/oauth/authorize-requests/{id}":
+    get:
+      tags:
+        - "oauth"
+      operationId: "oauth.request.read"
+      description: "Not yet built. Used by aerie's consent page. Reads a pending authorization request of the signed-in user: client name, scopes asked for, scopes already granted. 404 if it is not the user's, has expired or was decided. See behaviour/identity.md."
+      "x-kb-action": "oauth.request.read"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/OAuthAuthorizeRequestDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/oauth/authorize-requests/{id}/decision":
+    post:
+      tags:
+        - "oauth"
+      operationId: "oauth.request.decide"
+      description: "Not yet built. Used by aerie's consent page. Allows or denies a pending authorization request of the signed-in user and returns where to send the browser. See behaviour/identity.md."
+      "x-kb-action": "oauth.request.decide"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/OAuthDecisionRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/OAuthDecisionDto"
         "401":
           description: "Not signed in, or a bad token"
         "403":
@@ -6053,6 +6538,33 @@ components:
       properties:
         exempt:
           type: "boolean"
+    CompatAuthSettingsDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        basicPasswordEnabled:
+          type: "boolean"
+        allowHttpRedirects:
+          type: "boolean"
+        codeSeconds:
+          type: "integer"
+          format: "int32"
+        accessTokenSeconds:
+          type: "integer"
+          format: "int32"
+        refreshTokenDays:
+          type: "integer"
+          format: "int32"
+        grantMaxDays:
+          type: "integer"
+          format: "int32"
+          nullable: true
     CreatePageRequest:
       type: "object"
       properties:
@@ -6922,6 +7434,178 @@ components:
           type: "boolean"
         email:
           type: "boolean"
+    OAuthAuthorizeRequestDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        clientName:
+          type: "string"
+        scopes:
+          type: "array"
+          items:
+            type: "string"
+        alreadyGranted:
+          type: "array"
+          items:
+            type: "string"
+        expiresAt:
+          type: "string"
+          format: "date-time"
+    OAuthClientCreatedDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        clientSecret:
+          type: "string"
+          nullable: true
+        client:
+          "$ref": "#/components/schemas/OAuthClientDto"
+    OAuthClientDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        clientId:
+          type: "string"
+        name:
+          type: "string"
+        type:
+          type: "string"
+          enum:
+            - "confidential"
+            - "public"
+        redirectUris:
+          type: "array"
+          items:
+            type: "string"
+        scopes:
+          type: "array"
+          items:
+            type: "string"
+        requirePkce:
+          type: "boolean"
+        enabled:
+          type: "boolean"
+        activeGrants:
+          type: "integer"
+          format: "int32"
+        createdBy:
+          type: "string"
+        createdAt:
+          type: "string"
+          format: "date-time"
+        secretRotatedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+    OAuthClientRequest:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        name:
+          type: "string"
+          nullable: true
+        type:
+          type: "string"
+          nullable: true
+          enum:
+            - "confidential"
+            - "public"
+        redirectUris:
+          type: "array"
+          items:
+            type: "string"
+          nullable: true
+        scopes:
+          type: "array"
+          items:
+            type: "string"
+          nullable: true
+        requirePkce:
+          type: "boolean"
+          nullable: true
+        enabled:
+          type: "boolean"
+          nullable: true
+    OAuthDecisionDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        redirectTo:
+          type: "string"
+    OAuthDecisionRequest:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        allow:
+          type: "boolean"
+    OAuthGrantDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+        - "L-0101"
+        - "L-0104"
+        - "L-0108"
+        - "L-0111"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        clientName:
+          type: "string"
+        scopes:
+          type: "array"
+          items:
+            type: "string"
+        grantedAt:
+          type: "string"
+          format: "date-time"
+        lastUsedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
     OwnerRefDto:
       type: "object"
       properties:
