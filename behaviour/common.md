@@ -17,6 +17,26 @@ This file holds the rules every Data Center compatible operation shares: base pa
 - A request with no credentials is treated as the anonymous user. If anonymous access is not allowed for what was asked, the response is `401`.
 - Bad credentials give `401` regardless of what was requested.
 
+### Accounts with sign-in codes (provisional)
+
+This rule is provisional (question Q-0005). The full rules for tokens and sign-in arrive with `identity.md`, which replaces this section.
+
+- HTTP Basic has no place for a sign-in code. When an account has sign-in codes turned on, Basic credentials for it are refused with `401`. This covers codes the user turned on and codes a policy requires, such as for administrators.
+- The `401` is the same response a wrong password gives, whether or not the password was right, so Basic cannot be used to check a password while skipping the code. Aerie writes the real reason (codes on) to its audit log.
+- Such accounts call the compatible surface with a personal access token (see `identity.md`) instead.
+- Accounts without sign-in codes, including ones an administrator has exempted, use Basic as described above.
+
+## Identifiers
+
+Aerie's own ids are UUIDs. The compatible surface shows each object under an id of the shape clients expect (question Q-0003).
+
+- **Content** (pages, folders, comments, attachments): a string of decimal digits for a positive integer no larger than 2^53 - 1. All content shares one sequence, so a page and an attachment never have the same id.
+- **Spaces**: `id` is an integer from a separate sequence. Clients address spaces by key in paths (see `spaces.md`).
+- **Users**: `userKey` is the user's aerie id written as 32 lower-case hex digits, without hyphens.
+- Content and space ids are assigned when the object is created. Objects that exist before the compatible surface ships get one at migration, in creation order. An id never changes: not on rename, move, trash or restore. An id is never reused, even after a purge.
+- Anywhere the compatible surface reads a content id from the client, it also accepts that object's aerie UUID. This covers path segments, `newContentId`, and `ancestors[].id` and `container.id` in bodies. Responses always carry the decimal id. So a fixture made through `/api/v1` can be read at `/rest/api/content/{uuid}`, and the response gives its compatible id. CQL values accept decimal ids only.
+- A UUID that names no visible object gives `404`, like an unknown decimal id.
+
 ## Hiding what the caller cannot see
 
 - When a read targets something that exists but the caller may not view, the response is `404`, the same as for something that does not exist. A client must not be able to tell the two apart.

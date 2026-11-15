@@ -96,7 +96,7 @@ paths:
       tags: [content]
       operationId: createContent
       summary: Create a page, blog post or comment
-      description: Creates content, or publishes a draft when the body names an existing draft id. See behaviour/content.md.
+      description: Creates content, or publishes a draft when the body names an existing draft id. A parent that is an aerie page becomes a folder first. See behaviour/content.md (How the page tree maps onto aerie's tree).
       x-aerie-sources: [L-0001, L-0007, L-0015]
       x-aerie-since: 9.0.1
       x-aerie-tier: T1
@@ -694,8 +694,8 @@ paths:
         - $ref: '#/components/parameters/xsrfToken'
         - name: newContentId
           in: query
-          description: Content to move the attachment to.
-          schema: {type: string, pattern: '^[0-9]+$'}
+          description: Content to move the attachment to, as a decimal id or the aerie UUID. See behaviour/common.md (Identifiers).
+          schema: {type: string, pattern: '^([0-9]+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$'}
         - name: newName
           in: query
           description: New file name.
@@ -974,7 +974,7 @@ paths:
       tags: [spaces]
       operationId: createSpace
       summary: Create a global space
-      description: Needs key and name. See behaviour/spaces.md.
+      description: Needs key and name. No page is created with the space. See behaviour/spaces.md.
       x-aerie-sources: [L-0001, L-0007]
       x-aerie-since: 9.0.1
       x-aerie-tier: T1
@@ -1070,7 +1070,7 @@ paths:
       tags: [spaces]
       operationId: updateSpace
       summary: Update a space
-      description: Name, description and home page can change; the key cannot. See behaviour/spaces.md.
+      description: Name and description can change; the key cannot, and `homepage` is ignored. See behaviour/spaces.md.
       x-aerie-sources: [L-0001, L-0007]
       x-aerie-since: 9.0.1
       x-aerie-tier: T1
@@ -1436,20 +1436,20 @@ components:
     basic:
       type: http
       scheme: basic
-      description: Username and password. Other schemes are specified in behaviour/identity.md.
+      description: Username and password. Refused with 401 for accounts that have sign-in codes turned on (provisional, see behaviour/common.md). Other schemes are specified in behaviour/identity.md.
   parameters:
     contentId:
       name: id
       in: path
       required: true
-      description: Content id, decimal digits.
-      schema: {type: string, pattern: '^[0-9]+$'}
+      description: Content id, decimal digits. The content's aerie UUID is accepted in its place; responses always give the decimal id. See behaviour/common.md (Identifiers).
+      schema: {type: string, pattern: '^([0-9]+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$'}
     attachmentId:
       name: attachmentId
       in: path
       required: true
-      description: Id of the attachment, decimal digits. The `att` prefix some clients add is accepted.
-      schema: {type: string, pattern: '^(att)?[0-9]+$'}
+      description: Id of the attachment, decimal digits. The `att` prefix some clients add is accepted, and so is the attachment's aerie UUID. See behaviour/common.md (Identifiers).
+      schema: {type: string, pattern: '^((att)?[0-9]+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$'}
     versionPath:
       name: version
       in: path
@@ -1468,7 +1468,7 @@ components:
       name: spaceKey
       in: path
       required: true
-      description: Space key, matched without regard to case.
+      description: Space key, matched without regard to case. See behaviour/spaces.md (Space keys).
       schema: {type: string}
     spaceKeyQuery:
       name: spaceKey
@@ -1781,7 +1781,9 @@ components:
       type: object
       x-aerie-sources: [L-0001, L-0007, L-0014, L-0015]
       properties:
-        id: {type: string}
+        id:
+          type: string
+          description: Decimal digits. See behaviour/common.md (Identifiers).
         type: {$ref: '#/components/schemas/ContentType'}
         status: {$ref: '#/components/schemas/ContentStatus'}
         title: {type: string}
@@ -2031,14 +2033,19 @@ components:
     Space:
       type: object
       x-aerie-sources: [L-0001, L-0007, L-0014, L-0015]
+      description: Aerie spaces have no home page, so `homepage` is never returned. See behaviour/spaces.md.
       properties:
-        id: {type: integer, format: int64}
-        key: {type: string}
+        id:
+          type: integer
+          format: int64
+          description: See behaviour/common.md (Identifiers).
+        key:
+          type: string
+          description: The aerie key in upper case. See behaviour/spaces.md (Space keys).
         name: {type: string}
         type: {$ref: '#/components/schemas/SpaceType'}
         status: {$ref: '#/components/schemas/SpaceStatus'}
         description: {$ref: '#/components/schemas/SpaceDescription'}
-        homepage: {$ref: '#/components/schemas/Content'}
         icon: {$ref: '#/components/schemas/Icon'}
         metadata:
           type: object
@@ -2056,7 +2063,9 @@ components:
       x-aerie-sources: [L-0001, L-0007]
       required: [key, name]
       properties:
-        key: {type: string}
+        key:
+          type: string
+          description: Any case. Aerie lower-cases it, then it must be 2 to 32 lower-case letters, digits and hyphens. See behaviour/spaces.md (Space keys).
         name: {type: string, maxLength: 200}
         description:
           type: object
@@ -2064,6 +2073,7 @@ components:
             plain: {$ref: '#/components/schemas/ContentBody'}
         homepage:
           type: object
+          description: Ignored. Aerie spaces have no home page.
           properties:
             id: {type: string}
     PersonalSpaceWrite:
