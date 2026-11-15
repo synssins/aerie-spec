@@ -1873,13 +1873,19 @@ components:
         reason: Not Found
     Message:
       type: object
-      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-sources: [L-0001, L-0002, L-0003, L-0004, L-0005, L-0006, L-0007]
       properties:
-        key: {type: string}
+        key:
+          type: string
+          description: Stable identifier for the kind of message, in aerie's naming.
         args:
           type: array
-          items: {}
-        translation: {type: string}
+          description: Always empty. The values the message is about are in `translation`. See behaviour/common.md (Message objects).
+          maxItems: 0
+          items: {type: object}
+        translation:
+          type: string
+          description: The full text, with every value filled in.
     Icon:
       type: object
       x-aerie-sources: [L-0007, L-0015]
