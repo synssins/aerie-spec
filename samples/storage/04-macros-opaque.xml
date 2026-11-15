@@ -1,0 +1,18 @@
+<p>Known macro, rendered by aerie:</p>
+<ac:structured-macro ac:name="info" ac:schema-version="1" ac:macro-id="5f1c2a9e-0b7d-4c33-9a61-2d8e4f7b1c05">
+  <ac:parameter ac:name="title">Before you start</ac:parameter>
+  <ac:rich-text-body>
+    <p>Wear gloves when handling the compost.</p>
+  </ac:rich-text-body>
+</ac:structured-macro>
+<ac:structured-macro ac:name="code" ac:schema-version="1" ac:macro-id="c0d3c0d3-1111-4222-8333-944455556666">
+  <ac:parameter ac:name="language">bash</ac:parameter>
+  <ac:plain-text-body><![CDATA[for bed in A B C; do echo "check $bed"; done
+# keep <angle brackets> & ampersands as typed]]></ac:plain-text-body>
+</ac:structured-macro>
+<p>Add-on macro aerie does not know, kept as an opaque node:</p>
+<ac:structured-macro ac:name="soil-sensor-chart" ac:schema-version="3" ac:macro-id="77aa0e1b-2c3d-4e5f-8a9b-0c1d2e3f4a5b">
+  <ac:parameter ac:name="sensor">bed-a-moisture</ac:parameter>
+  <ac:parameter ac:name="range">7d</ac:parameter>
+</ac:structured-macro>
+<p>Unknown element, also kept as an opaque node: <xyz:widget xmlns:xyz="urn:example:widgets" xyz:size="small">gauge</xyz:widget></p>

@@ -1,0 +1,2197 @@
+openapi: 3.0.3
+info:
+  title: Aerie Data Center compatible API
+  version: 0.1.0
+  description: >-
+    The Data Center compatible REST surface of aerie, tier T1. One contract
+    covers Data Center 9.0 and later; `x-aerie-since` on each operation names
+    the first Data Center version whose published spec has it. Behaviour is
+    specified in `behaviour/` (start with `behaviour/common.md`). Every
+    description and example here is written by the aerie spec room.
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+servers:
+  - url: '{base}'
+    description: The aerie site, with any context prefix.
+    variables:
+      base:
+        default: http://localhost:8080
+security:
+  - basic: []
+  - {}
+tags:
+  - name: content
+    description: Pages, blog posts and comments.
+  - name: child-content
+    description: Children and descendants of a piece of content.
+  - name: attachments
+    description: Files attached to content, and their versions.
+  - name: labels
+    description: Labels on content.
+  - name: versions
+    description: Version history of content.
+  - name: body-conversion
+    description: Converting bodies between representations.
+  - name: spaces
+    description: Spaces, their content and trash.
+  - name: search
+    description: CQL search.
+  - name: users
+    description: Reading users and their groups.
+  - name: server-information
+    description: Facts about the running build.
+  - name: long-tasks
+    description: Work that outlives a request.
+paths:
+  /rest/api/content:
+    get:
+      tags: [content]
+      operationId: listContent
+      summary: List pages or blog posts
+      description: Offset-paged list of content filtered by type, space, title, status, posting day or ids. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0003, L-0004, L-0007, L-0013, L-0014]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/spaceKeyQuery'
+        - $ref: '#/components/parameters/xoauthRequestorId'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+        - name: postingDay
+          in: query
+          description: Blog posts only. The day the post is dated, as yyyy-mm-dd.
+          schema: {type: string, format: date}
+        - name: ids
+          in: query
+          description: Fetch exactly these content ids. When present, `type` is not applied. Since 9.5.1.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {type: string}
+        - name: title
+          in: query
+          description: Exact title, matched without regard to case.
+          schema: {type: string}
+        - name: type
+          in: query
+          description: Content type to list.
+          schema:
+            type: string
+            enum: [page, blogpost]
+            default: page
+        - $ref: '#/components/parameters/statusFilter'
+      responses:
+        '200':
+          description: One page of content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    post:
+      tags: [content]
+      operationId: createContent
+      summary: Create a page, blog post or comment
+      description: Creates content, or publishes a draft when the body names an existing draft id. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/expand'
+        - name: status
+          in: query
+          description: Status to create the content in. Wins over `status` in the body.
+          schema:
+            type: string
+            enum: [current, draft]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentWrite'}
+            example:
+              type: page
+              title: Release checklist
+              space: {key: OPS}
+              ancestors: [{id: '40001'}]
+              body:
+                storage:
+                  value: <p>Steps before every release.</p>
+                  representation: storage
+      responses:
+        '200':
+          description: The created content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Content'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/search:
+    get:
+      tags: [search]
+      operationId: searchContent
+      summary: Find content with CQL
+      description: Returns content matching a CQL query, offset-paged. See behaviour/search-cql.md.
+      x-aerie-sources: [L-0001, L-0004, L-0007, L-0016, L-0017, L-0018, L-0019]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/cql'
+        - $ref: '#/components/parameters/cqlcontext'
+        - $ref: '#/components/parameters/xoauthRequestorId'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of matching content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/scan:
+    get:
+      tags: [content]
+      operationId: scanContent
+      summary: Walk all content with a cursor
+      description: Cursor-paged walk over every item the caller can see. See behaviour/content.md and behaviour/common.md.
+      x-aerie-sources: [L-0001, L-0003, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/spaceKeyQuery'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+        - name: type
+          in: query
+          description: Content type to walk. Read on the first request only. Since 9.5.1.
+          schema:
+            type: string
+            enum: [page, blogpost, comment]
+            default: page
+        - $ref: '#/components/parameters/statusFilter'
+      responses:
+        '200':
+          description: One cursor page of content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentCursorPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}:
+    parameters:
+      - $ref: '#/components/parameters/contentId'
+    get:
+      tags: [content]
+      operationId: getContent
+      summary: Read one piece of content
+      description: Default expansion is space, history and version. `version` reads a historical version. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0004, L-0007, L-0014, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/xoauthRequestorId'
+        - $ref: '#/components/parameters/expand'
+        - name: version
+          in: query
+          description: Return this version number instead of the current one.
+          schema: {type: integer, format: int32, minimum: 1}
+        - $ref: '#/components/parameters/statusFilter'
+      responses:
+        '200':
+          description: The content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Content'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      tags: [content]
+      operationId: deleteContent
+      summary: Trash or purge content
+      description: Trashes current content; purges trashed content when `status=trashed`; deletes comments and drafts outright. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - name: status
+          in: query
+          description: The status the content has now.
+          schema:
+            type: string
+            enum: [current, trashed, draft]
+            default: current
+      responses:
+        '204': {description: Trashed or deleted.}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+    put:
+      tags: [content]
+      operationId: updateContent
+      summary: Update content
+      description: >-
+        Requires `version.number` equal to the current number plus one. Also
+        restores trashed content (query `status=trashed`, body `status:
+        current`). The published spec names the path parameter `contentId`; the URL is the same. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0002, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - name: status
+          in: query
+          description: The status the content has now.
+          schema:
+            type: string
+            enum: [current, trashed, draft]
+            default: current
+        - name: conflictPolicy
+          in: query
+          description: What to do when the version number does not follow the current one. Only `abort` is supported.
+          schema:
+            type: string
+            enum: [abort]
+            default: abort
+        - name: asyncReconciliation
+          in: query
+          description: Accepted and ignored. Since 9.2.4.
+          schema: {type: boolean, default: false}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentWrite'}
+            example:
+              type: page
+              title: Release checklist
+              version: {number: 2, message: Added rollback step}
+              body:
+                storage:
+                  value: <p>Steps before every release.</p><ol><li>Plan rollback</li></ol>
+                  representation: storage
+      responses:
+        '200':
+          description: The updated content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Content'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /rest/api/content/{id}/history:
+    get:
+      tags: [versions]
+      operationId: getContentHistory
+      summary: Read the history of content
+      description: Creation facts and links to versions. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007, L-0014]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/expand'
+      responses:
+        '200':
+          description: The history.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/History'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/history/{version}/macro/hash/{hash}:
+    get:
+      tags: [content]
+      operationId: getMacroBodyByHash
+      summary: Read a macro by hash
+      description: Looks up a macro in one version of the body by aerie's hash of its markup. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/versionPath'
+        - name: hash
+          in: path
+          required: true
+          description: Lower-case hex SHA-256 of the macro's storage markup.
+          schema: {type: string}
+      responses:
+        '200':
+          description: The macro.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MacroInstance'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/history/{version}/macro/id/{macroId}:
+    get:
+      tags: [content]
+      operationId: getMacroBodyById
+      summary: Read a macro by id
+      description: Looks up the macro with this macro id in one version of the body. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/versionPath'
+        - name: macroId
+          in: path
+          required: true
+          description: The macro id stored with the macro.
+          schema: {type: string}
+      responses:
+        '200':
+          description: The macro.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MacroInstance'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/version/{versionNumber}:
+    delete:
+      tags: [versions]
+      operationId: deleteContentVersion
+      summary: Remove one historical version
+      description: Pages and blog posts only; the current version cannot be removed. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - name: versionNumber
+          in: path
+          required: true
+          description: The version to remove.
+          schema: {type: integer, format: int32, minimum: 1}
+      responses:
+        '204': {description: Removed.}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/child:
+    get:
+      tags: [child-content]
+      operationId: getChildren
+      summary: Direct children by type
+      description: A map keyed by content type; pick types with `expand` (page, comment, attachment). See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007, L-0014]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/parentVersion'
+      responses:
+        '200':
+          description: Children by type.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentByType'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/child/comment:
+    get:
+      tags: [child-content]
+      operationId: getChildComments
+      summary: Comments on content
+      description: Top-level comments, or the whole thread with `depth=all`, filtered by location. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/expand'
+        - name: depth
+          in: query
+          description: Empty for top-level comments only, `all` for every comment in the thread.
+          schema:
+            type: string
+            enum: ['', all]
+            default: ''
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+        - name: location
+          in: query
+          description: Only comments in these locations. Empty means all.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [inline, footer, resolved]
+        - $ref: '#/components/parameters/parentVersion'
+      responses:
+        '200':
+          description: One page of comments.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/child/{type}:
+    get:
+      tags: [child-content]
+      operationId: getChildrenOfType
+      summary: Direct children of one type
+      description: Offset-paged list of one child type. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/contentTypePath'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/parentVersion'
+      responses:
+        '200':
+          description: One page of children.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/descendant:
+    get:
+      tags: [child-content]
+      operationId: getDescendants
+      summary: Descendants by type
+      description: A map keyed by content type covering all levels; pick types with `expand`. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007, L-0014]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/expand'
+      responses:
+        '200':
+          description: Descendants by type.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentByType'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/descendant/{type}:
+    get:
+      tags: [child-content]
+      operationId: getDescendantsOfType
+      summary: Descendants of one type
+      description: Offset-paged list of one descendant type. See behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/contentTypePath'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of descendants.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/descendant/page/count:
+    get:
+      tags: [child-content]
+      operationId: countDescendantPages
+      summary: Count pages below a page
+      description: Counts current pages at any depth below the page, not the page itself. See behaviour/content.md.
+      x-aerie-sources: [L-0005, L-0007]
+      x-aerie-since: 10.2.20
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+      responses:
+        '200':
+          description: The count.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DescendantPageCount'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/child/attachment:
+    get:
+      tags: [attachments]
+      operationId: listAttachments
+      summary: List attachments
+      description: Current attachments of the content, offset-paged. See behaviour/attachments.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/expand'
+        - name: filename
+          in: query
+          description: Only the attachment with this exact file name.
+          schema: {type: string}
+        - name: mediaType
+          in: query
+          description: Only attachments of this MIME type.
+          schema: {type: string}
+        - $ref: '#/components/parameters/limit50'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of attachments.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    post:
+      tags: [attachments]
+      operationId: createAttachments
+      summary: Upload attachments
+      description: Multipart upload of one or more files. Needs the XSRF header. See behaviour/attachments.md.
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/xsrfToken'
+        - name: allowDuplicated
+          in: query
+          description: When true, a file whose name already exists becomes a new version of that attachment.
+          schema: {type: boolean, default: false}
+        - name: status
+          in: query
+          description: Status of the content to attach to.
+          schema:
+            type: string
+            enum: [current, draft]
+            default: current
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: {$ref: '#/components/schemas/AttachmentUpload'}
+            encoding:
+              file:
+                contentType: application/octet-stream
+      responses:
+        '200':
+          description: The created attachments.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+  /rest/api/content/{id}/child/attachment/{attachmentId}:
+    parameters:
+      - $ref: '#/components/parameters/contentId'
+      - $ref: '#/components/parameters/attachmentId'
+    put:
+      tags: [attachments]
+      operationId: updateAttachment
+      summary: Update attachment properties
+      description: Renames, changes media type or comment, or moves to other content. Bytes do not change. See behaviour/attachments.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentWrite'}
+      responses:
+        '200':
+          description: The attachment.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Content'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+    delete:
+      tags: [attachments]
+      operationId: deleteAttachment
+      summary: Trash an attachment
+      description: Moves the attachment and all its versions to the space trash. See behaviour/attachments.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      responses:
+        '204': {description: Trashed.}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/child/attachment/{attachmentId}/data:
+    post:
+      tags: [attachments]
+      operationId: updateAttachmentData
+      summary: Upload new bytes for an attachment
+      description: Adds a new version with the uploaded file. Needs the XSRF header. See behaviour/attachments.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/attachmentId'
+        - $ref: '#/components/parameters/xsrfToken'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: {$ref: '#/components/schemas/AttachmentDataUpload'}
+      responses:
+        '200':
+          description: The attachment.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Content'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '413': {$ref: '#/components/responses/TooLarge'}
+  /rest/api/content/{id}/child/attachment/{attachmentId}/move:
+    post:
+      tags: [attachments]
+      operationId: moveAttachment
+      summary: Move or rename an attachment
+      description: At least one of `newContentId` and `newName` is required. Needs the XSRF header. See behaviour/attachments.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/attachmentId'
+        - $ref: '#/components/parameters/xsrfToken'
+        - name: newContentId
+          in: query
+          description: Content to move the attachment to.
+          schema: {type: string, pattern: '^[0-9]+$'}
+        - name: newName
+          in: query
+          description: New file name.
+          schema: {type: string}
+      responses:
+        '204': {description: Moved.}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/child/attachment/{attachmentId}/version/{version}:
+    delete:
+      tags: [attachments]
+      operationId: deleteAttachmentVersion
+      summary: Remove one attachment version
+      description: Removes one version for good; not the only one. See behaviour/attachments.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/attachmentId'
+        - $ref: '#/components/parameters/versionPath'
+      responses:
+        '204': {description: Removed.}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/child/attachment/{attachmentId}/extractedtext:
+    get:
+      tags: [attachments]
+      operationId: getAttachmentExtractedText
+      summary: Read the text extracted from an attachment
+      description: Plain text from the current version, cut at `limit` characters; 204 when there is none. See behaviour/attachments.md.
+      x-aerie-sources: [L-0004, L-0007]
+      x-aerie-since: 10.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - $ref: '#/components/parameters/attachmentId'
+        - name: limit
+          in: query
+          description: Most characters to return.
+          schema: {type: integer, format: int64, minimum: 1}
+      responses:
+        '200':
+          description: The extracted text.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AttachmentExtractedText'}
+        '204': {description: No extracted text is available.}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/label:
+    parameters:
+      - $ref: '#/components/parameters/contentId'
+    get:
+      tags: [labels]
+      operationId: listContentLabels
+      summary: List labels on content
+      description: Offset-paged, default limit 200, filtered by prefix. See behaviour/labels-properties.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - name: prefix
+          in: query
+          description: Only labels with these prefixes.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {$ref: '#/components/schemas/LabelPrefix'}
+        - $ref: '#/components/parameters/limit200'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of labels.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LabelPage'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    post:
+      tags: [labels]
+      operationId: addContentLabels
+      summary: Add labels to content
+      description: Body is one label or a list of labels. Returns every label on the content after the change. See behaviour/labels-properties.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/LabelWrite'
+                - type: array
+                  items: {$ref: '#/components/schemas/LabelWrite'}
+            example:
+              - {prefix: global, name: release}
+              - {name: checklist}
+      responses:
+        '200':
+          description: The content's labels after the change.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LabelPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      tags: [labels]
+      operationId: removeContentLabelByQuery
+      summary: Remove a label (name in the query)
+      description: Use this form for label names that hold a slash. See behaviour/labels-properties.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: The label, optionally written as prefix:name.
+          schema: {type: string}
+      responses:
+        '204': {description: Removed.}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/content/{id}/label/{label}:
+    delete:
+      tags: [labels]
+      operationId: removeContentLabel
+      summary: Remove a label (name in the path)
+      description: Same as the query form, for names without a slash. See behaviour/labels-properties.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/contentId'
+        - name: label
+          in: path
+          required: true
+          description: The label, optionally written as prefix:name.
+          schema: {type: string}
+      responses:
+        '204': {description: Removed.}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/contentbody/convert/{to}:
+    post:
+      tags: [body-conversion]
+      operationId: convertBody
+      summary: Convert a body between representations
+      description: storage to view, export_view, styled_view or editor; editor to storage. See behaviour/representations.md.
+      x-aerie-sources: [L-0001, L-0007, L-0020]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - name: to
+          in: path
+          required: true
+          description: Target representation.
+          schema:
+            type: string
+            enum: [storage, view, export_view, styled_view, editor]
+        - $ref: '#/components/parameters/expand'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ContentBody'}
+            example:
+              value: <p>Hello <strong>team</strong></p>
+              representation: storage
+      responses:
+        '200':
+          description: The converted body.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentBody'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /rest/api/space:
+    get:
+      tags: [spaces]
+      operationId: listSpaces
+      summary: List spaces
+      description: Offset-paged list of spaces with key, id, type, status and label filters. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0003, L-0004, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - name: spaceKey
+          in: query
+          description: Only these keys.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {type: string}
+        - name: spaceKeys
+          in: query
+          description: Only these keys, comma-separated. Since 9.5.1.
+          schema: {type: string}
+        - name: spaceKeySingle
+          in: query
+          description: Only this key.
+          schema: {type: string}
+        - name: spaceId
+          in: query
+          description: Only these ids. Cannot be combined with key filters. Since 9.5.1.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {type: string}
+        - name: spaceIds
+          in: query
+          description: Only these ids, comma-separated. Cannot be combined with key filters. Since 9.5.1.
+          schema: {type: string}
+        - name: type
+          in: query
+          description: Only spaces of this type.
+          schema: {$ref: '#/components/schemas/SpaceType'}
+        - name: status
+          in: query
+          description: Only spaces in this status. Both when absent.
+          schema: {$ref: '#/components/schemas/SpaceStatus'}
+        - name: label
+          in: query
+          description: Only spaces carrying these space labels.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {type: string}
+        - name: contentLabel
+          in: query
+          description: Only spaces holding content with these labels. Since 9.5.1.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {type: string}
+        - name: favourite
+          in: query
+          description: When true, only the caller's favourite spaces.
+          schema: {type: boolean}
+        - name: hasRetentionPolicy
+          in: query
+          description: Accepted. Aerie has no retention policies in T1.
+          schema: {type: boolean}
+        - $ref: '#/components/parameters/xoauthRequestorId'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of spaces.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SpacePage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+    post:
+      tags: [spaces]
+      operationId: createSpace
+      summary: Create a global space
+      description: Needs key and name. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SpaceWrite'}
+            example:
+              key: OPS
+              name: Operations
+              description:
+                plain: {value: Runbooks and on-call notes, representation: plain}
+      responses:
+        '200':
+          description: The space.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Space'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /rest/api/space/_private:
+    post:
+      tags: [spaces]
+      operationId: createPrivateSpace
+      summary: Create a space only its creator can see
+      description: Same body as space creation. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SpaceWrite'}
+      responses:
+        '200':
+          description: The space.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Space'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /rest/api/space/personal:
+    post:
+      tags: [spaces]
+      operationId: createPersonalSpace
+      summary: Create the caller's personal space
+      description: 409 when the caller already has one. See behaviour/spaces.md.
+      x-aerie-sources: [L-0003, L-0007]
+      x-aerie-since: 9.5.1
+      x-aerie-tier: T1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/PersonalSpaceWrite'}
+      responses:
+        '200':
+          description: The space.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Space'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '409': {$ref: '#/components/responses/Conflict'}
+  /rest/api/space/{spaceKey}:
+    parameters:
+      - $ref: '#/components/parameters/spaceKeyPath'
+    get:
+      tags: [spaces]
+      operationId: getSpace
+      summary: Read one space
+      description: See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0004, L-0007, L-0014]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/xoauthRequestorId'
+        - $ref: '#/components/parameters/expand'
+      responses:
+        '200':
+          description: The space.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Space'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    put:
+      tags: [spaces]
+      operationId: updateSpace
+      summary: Update a space
+      description: Name, description and home page can change; the key cannot. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SpaceWrite'}
+      responses:
+        '200':
+          description: The space.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Space'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      tags: [spaces]
+      operationId: deleteSpace
+      summary: Delete a space
+      description: Starts a long task and returns at once. Cannot be undone. See behaviour/spaces.md and behaviour/common.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      responses:
+        '202':
+          description: Deletion started.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LongTaskSubmission'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/space/{spaceKey}/archive:
+    put:
+      tags: [spaces]
+      operationId: archiveSpace
+      summary: Archive a space
+      description: Idempotent. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/spaceKeyPath'
+      responses:
+        '204': {description: Archived.}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/space/{spaceKey}/restore:
+    put:
+      tags: [spaces]
+      operationId: restoreSpace
+      summary: Restore an archived space
+      description: Idempotent. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/spaceKeyPath'
+      responses:
+        '204': {description: Restored.}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/space/{spaceKey}/content:
+    get:
+      tags: [spaces]
+      operationId: getSpaceContent
+      summary: Content of a space by type
+      description: A map with page and blogpost lists. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/spaceKeyPath'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/spaceDepth'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: Content by type.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentByType'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/space/{spaceKey}/content/{type}:
+    get:
+      tags: [spaces]
+      operationId: getSpaceContentOfType
+      summary: Content of a space, one type
+      description: Offset-paged list of pages or blog posts. See behaviour/spaces.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/spaceKeyPath'
+        - name: type
+          in: path
+          required: true
+          description: Content type to list.
+          schema:
+            type: string
+            enum: [page, blogpost]
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/spaceDepth'
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/space/{spaceKey}/trash:
+    parameters:
+      - $ref: '#/components/parameters/spaceKeyPath'
+    get:
+      tags: [spaces]
+      operationId: listSpaceTrash
+      summary: List a space's trash
+      description: Cursor-paged, newest-trashed first. See behaviour/spaces.md.
+      x-aerie-sources: [L-0003, L-0007]
+      x-aerie-since: 9.5.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit25'
+      responses:
+        '200':
+          description: One cursor page of trashed content.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ContentCursorPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+    delete:
+      tags: [spaces]
+      operationId: emptySpaceTrash
+      summary: Empty a space's trash
+      description: Purges everything in the space trash. Cannot be undone. See behaviour/spaces.md.
+      x-aerie-sources: [L-0003, L-0007]
+      x-aerie-since: 9.5.1
+      x-aerie-tier: T1
+      responses:
+        '204': {description: Emptied.}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/search:
+    get:
+      tags: [search]
+      operationId: search
+      summary: Search with CQL
+      description: Search results with excerpts and container summaries. See behaviour/search-cql.md.
+      x-aerie-sources: [L-0001, L-0007, L-0016, L-0017, L-0018, L-0019]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/cql'
+        - $ref: '#/components/parameters/cqlcontext'
+        - $ref: '#/components/parameters/expand'
+        - name: includeArchivedSpaces
+          in: query
+          description: When true, content in archived spaces is included.
+          schema: {type: boolean, default: false}
+        - $ref: '#/components/parameters/limit25'
+        - $ref: '#/components/parameters/start'
+        - name: excerpt
+          in: query
+          description: How to build each excerpt.
+          schema:
+            type: string
+            enum: [highlight, indexed, none]
+            default: highlight
+      responses:
+        '200':
+          description: One page of search results.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SearchPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /rest/api/user:
+    get:
+      tags: [users]
+      operationId: getUser
+      summary: Read a user
+      description: Pick the user by `key` or `username`, exactly one. See behaviour/users.md.
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/userKeyQuery'
+        - $ref: '#/components/parameters/usernameQuery'
+      responses:
+        '200':
+          description: The user.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/User'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/user/anonymous:
+    get:
+      tags: [users]
+      operationId: getAnonymousUser
+      summary: How the anonymous user looks
+      description: See behaviour/users.md.
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/expand'
+      responses:
+        '200':
+          description: The anonymous user.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/User'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /rest/api/user/current:
+    get:
+      tags: [users]
+      operationId: getCurrentUser
+      summary: The caller
+      description: The anonymous user when no credentials are sent. See behaviour/users.md.
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/expand'
+      responses:
+        '200':
+          description: The caller.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/User'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /rest/api/user/list:
+    get:
+      tags: [users]
+      operationId: listUsers
+      summary: List all users
+      description: Every account, enabled or not, offset-paged, default limit 100. See behaviour/users.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit100'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of users.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/UserPage'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+  /rest/api/user/memberof:
+    get:
+      tags: [users]
+      operationId: getUserGroups
+      summary: Groups a user is in
+      description: Direct memberships, offset-paged, default limit 200. See behaviour/users.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit200'
+        - $ref: '#/components/parameters/start'
+        - $ref: '#/components/parameters/userKeyQuery'
+        - $ref: '#/components/parameters/usernameQuery'
+      responses:
+        '200':
+          description: One page of groups.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/GroupPage'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /rest/api/server-information:
+    get:
+      tags: [server-information]
+      operationId: getServerInformation
+      summary: Facts about the running build
+      description: The Data Center version aerie presents, with matching build numbers. See behaviour/common.md.
+      x-aerie-sources: [L-0002, L-0007]
+      x-aerie-since: 9.2.4
+      x-aerie-tier: T1
+      responses:
+        '200':
+          description: Server information.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ServerInformation'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /rest/api/longtask:
+    get:
+      tags: [long-tasks]
+      operationId: listLongTasks
+      summary: List long tasks
+      description: Tasks the caller started (all tasks for administrators), newest first. See behaviour/common.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/limit100'
+        - $ref: '#/components/parameters/start'
+      responses:
+        '200':
+          description: One page of task statuses.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LongTaskPage'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+  /rest/api/longtask/{id}:
+    get:
+      tags: [long-tasks]
+      operationId: getLongTask
+      summary: Read one long task
+      description: See behaviour/common.md.
+      x-aerie-sources: [L-0001, L-0007]
+      x-aerie-since: 9.0.1
+      x-aerie-tier: T1
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The task id.
+          schema: {type: string}
+        - $ref: '#/components/parameters/expand'
+      responses:
+        '200':
+          description: The task status.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/LongTaskStatus'}
+        '401': {$ref: '#/components/responses/Unauthorized'}
+        '404': {$ref: '#/components/responses/NotFound'}
+components:
+  securitySchemes:
+    basic:
+      type: http
+      scheme: basic
+      description: Username and password. Other schemes are specified in behaviour/identity.md.
+  parameters:
+    contentId:
+      name: id
+      in: path
+      required: true
+      description: Content id, decimal digits.
+      schema: {type: string, pattern: '^[0-9]+$'}
+    attachmentId:
+      name: attachmentId
+      in: path
+      required: true
+      description: Id of the attachment, decimal digits. The `att` prefix some clients add is accepted.
+      schema: {type: string, pattern: '^(att)?[0-9]+$'}
+    versionPath:
+      name: version
+      in: path
+      required: true
+      description: A version number.
+      schema: {type: integer, format: int32, minimum: 1}
+    contentTypePath:
+      name: type
+      in: path
+      required: true
+      description: Content type to list.
+      schema:
+        type: string
+        enum: [page, blogpost, comment, attachment]
+    spaceKeyPath:
+      name: spaceKey
+      in: path
+      required: true
+      description: Space key, matched without regard to case.
+      schema: {type: string}
+    spaceKeyQuery:
+      name: spaceKey
+      in: query
+      description: Only content in this space.
+      schema: {type: string}
+    expand:
+      name: expand
+      in: query
+      description: Comma-separated field paths to expand, with dots for nested fields. See behaviour/common.md.
+      schema: {type: string}
+      example: body.storage,version,ancestors
+    start:
+      name: start
+      in: query
+      description: Zero-based index of the first item to return.
+      schema: {type: integer, format: int32, minimum: 0, default: 0}
+    limit25:
+      name: limit
+      in: query
+      description: Most items to return, capped by the server ceiling.
+      schema: {type: integer, format: int32, minimum: 1, default: 25}
+    limit50:
+      name: limit
+      in: query
+      description: Most items to return, capped by the server ceiling.
+      schema: {type: integer, format: int32, minimum: 1, default: 50}
+    limit100:
+      name: limit
+      in: query
+      description: Most items to return, capped by the server ceiling.
+      schema: {type: integer, format: int32, minimum: 1, default: 100}
+    limit200:
+      name: limit
+      in: query
+      description: Most items to return, capped by the server ceiling.
+      schema: {type: integer, format: int32, minimum: 1, default: 200}
+    cursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from a previous response. Absent on the first request.
+      schema: {type: string}
+    statusFilter:
+      name: status
+      in: query
+      description: Statuses to accept. `any` means current or trashed.
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [current, trashed, draft, any]
+        default: [current]
+    parentVersion:
+      name: parentVersion
+      in: query
+      description: Version of the parent to read children at. Only 0 (now) is supported.
+      schema: {type: integer, format: int32, default: 0}
+    spaceDepth:
+      name: depth
+      in: query
+      description: All content, or top-level content only.
+      schema:
+        type: string
+        enum: [all, root]
+        default: all
+    cql:
+      name: cql
+      in: query
+      required: true
+      description: The CQL query. See behaviour/search-cql.md.
+      schema: {type: string}
+      example: type = page AND space = OPS AND label = release ORDER BY lastmodified DESC
+    cqlcontext:
+      name: cqlcontext
+      in: query
+      description: 'JSON object with `spaceKey` and `contentId`, used by context functions such as currentSpace().'
+      schema: {type: string}
+      example: '{"spaceKey":"OPS"}'
+    userKeyQuery:
+      name: key
+      in: query
+      description: User key. Give this or `username`, not both.
+      schema: {type: string}
+    usernameQuery:
+      name: username
+      in: query
+      description: Username. Give this or `key`, not both.
+      schema: {type: string}
+    xoauthRequestorId:
+      name: xoauth_requestor_id
+      in: query
+      description: Accepted and ignored. Since 10.0.1.
+      schema: {type: string}
+    xsrfToken:
+      name: X-Atlassian-Token
+      in: header
+      required: true
+      description: Required on multipart writes. Both spellings are accepted.
+      schema:
+        type: string
+        enum: [no-check, nocheck]
+  responses:
+    BadRequest:
+      description: A parameter or the body is not valid.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RestError'}
+    Unauthorized:
+      description: No valid credentials, and anonymous access is not allowed for this.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RestError'}
+    Forbidden:
+      description: The caller may see the target but not do this to it, or the XSRF header is missing.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RestError'}
+    NotFound:
+      description: The target does not exist, or the caller may not see it.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RestError'}
+    Conflict:
+      description: The request clashes with the current state, for example a stale version number.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RestError'}
+    TooLarge:
+      description: An uploaded file is over the size limit.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/RestError'}
+  schemas:
+    Links:
+      description: Links for an object. Which keys appear is set out in behaviour/common.md.
+      type: object
+      x-aerie-sources: [L-0013, L-0015]
+      properties:
+        self: {type: string}
+        base: {type: string}
+        context: {type: string}
+        webui: {type: string}
+        tinyui: {type: string}
+        edit: {type: string}
+        download: {type: string}
+        collection: {type: string}
+        next: {type: string}
+        prev: {type: string}
+      additionalProperties: {type: string}
+    Expandable:
+      description: Names of fields that were not expanded, each mapped to a REST path or an empty string.
+      type: object
+      x-aerie-sources: [L-0014]
+      additionalProperties: {type: string}
+    RestError:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      properties:
+        statusCode: {type: integer, format: int32}
+        message: {type: string}
+        reason: {type: string}
+        data:
+          type: object
+          properties:
+            authorized: {type: boolean}
+            valid: {type: boolean}
+            allowedInReadOnlyMode: {type: boolean}
+            successful: {type: boolean}
+            errors:
+              type: array
+              items:
+                type: object
+                properties:
+                  message: {$ref: '#/components/schemas/Message'}
+      example:
+        statusCode: 404
+        message: No content with id 99999 is visible to you.
+        reason: Not Found
+    Message:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      properties:
+        key: {type: string}
+        args:
+          type: array
+          items: {}
+        translation: {type: string}
+    Icon:
+      type: object
+      x-aerie-sources: [L-0007, L-0015]
+      properties:
+        path: {type: string}
+        width: {type: integer, format: int32}
+        height: {type: integer, format: int32}
+        isDefault: {type: boolean}
+    User:
+      type: object
+      x-aerie-sources: [L-0007, L-0015]
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [known, anonymous, unknown]
+        username:
+          type: string
+          description: Absent for the anonymous user.
+        userKey:
+          type: string
+          description: Stable key; absent for the anonymous user.
+        displayName: {type: string}
+        profilePicture: {$ref: '#/components/schemas/Icon'}
+        status:
+          type: string
+          enum: [current, deactivated]
+          description: Present when expanded.
+        _links: {$ref: '#/components/schemas/Links'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+      example:
+        type: known
+        username: rpatel
+        userKey: 8a7f80e2915c4c3b0191a0c1d2e30004
+        displayName: Ravi Patel
+        profilePicture: {path: /images/avatar/default.png, width: 48, height: 48, isDefault: true}
+        _links: {self: 'http://localhost:8080/rest/api/user?key=8a7f80e2915c4c3b0191a0c1d2e30004'}
+    Group:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      properties:
+        type:
+          type: string
+          enum: [group]
+        name: {type: string}
+        _links: {$ref: '#/components/schemas/Links'}
+    Version:
+      type: object
+      x-aerie-sources: [L-0007, L-0015]
+      properties:
+        by: {$ref: '#/components/schemas/User'}
+        when: {type: string, format: date-time}
+        message: {type: string}
+        number: {type: integer, format: int32}
+        minorEdit: {type: boolean}
+        hidden: {type: boolean}
+        content: {$ref: '#/components/schemas/Content'}
+        _links: {$ref: '#/components/schemas/Links'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    History:
+      type: object
+      x-aerie-sources: [L-0007, L-0014, L-0015]
+      properties:
+        latest: {type: boolean}
+        createdBy: {$ref: '#/components/schemas/User'}
+        createdDate: {type: string, format: date-time}
+        lastUpdated: {$ref: '#/components/schemas/Version'}
+        previousVersion: {$ref: '#/components/schemas/Version'}
+        nextVersion: {$ref: '#/components/schemas/Version'}
+        contributors:
+          type: object
+          properties:
+            publishers:
+              type: object
+              properties:
+                users:
+                  type: array
+                  items: {$ref: '#/components/schemas/User'}
+                userKeys:
+                  type: array
+                  items: {type: string}
+        _links: {$ref: '#/components/schemas/Links'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    Representation:
+      type: string
+      x-aerie-sources: [L-0001, L-0007, L-0014]
+      enum: [storage, editor, view, export_view, styled_view, anonymous_export_view, plain]
+    ContentBody:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      required: [value, representation]
+      properties:
+        value: {type: string}
+        representation: {$ref: '#/components/schemas/Representation'}
+        content:
+          description: Optional page context for conversion; only `id` is read.
+          allOf:
+            - $ref: '#/components/schemas/Content'
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    Body:
+      type: object
+      description: One entry per expanded representation.
+      x-aerie-sources: [L-0014, L-0015]
+      properties:
+        storage: {$ref: '#/components/schemas/ContentBody'}
+        editor: {$ref: '#/components/schemas/ContentBody'}
+        view: {$ref: '#/components/schemas/ContentBody'}
+        export_view: {$ref: '#/components/schemas/ContentBody'}
+        styled_view: {$ref: '#/components/schemas/ContentBody'}
+        anonymous_export_view: {$ref: '#/components/schemas/ContentBody'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    ContentType:
+      type: string
+      x-aerie-sources: [L-0001, L-0007, L-0017]
+      enum: [page, blogpost, comment, attachment]
+    ContentStatus:
+      type: string
+      x-aerie-sources: [L-0001, L-0007]
+      enum: [current, trashed, historical, draft]
+    Content:
+      type: object
+      x-aerie-sources: [L-0001, L-0007, L-0014, L-0015]
+      properties:
+        id: {type: string}
+        type: {$ref: '#/components/schemas/ContentType'}
+        status: {$ref: '#/components/schemas/ContentStatus'}
+        title: {type: string}
+        space: {$ref: '#/components/schemas/Space'}
+        history: {$ref: '#/components/schemas/History'}
+        version: {$ref: '#/components/schemas/Version'}
+        ancestors:
+          type: array
+          items: {$ref: '#/components/schemas/Content'}
+        container:
+          description: The page or blog post of a comment or attachment, or the space of a page.
+          type: object
+          additionalProperties: true
+        body: {$ref: '#/components/schemas/Body'}
+        children: {$ref: '#/components/schemas/ContentByType'}
+        descendants: {$ref: '#/components/schemas/ContentByType'}
+        metadata:
+          type: object
+          properties:
+            labels: {$ref: '#/components/schemas/LabelPage'}
+            mediaType: {type: string}
+            comment: {type: string}
+          additionalProperties: true
+        extensions:
+          type: object
+          properties:
+            position: {type: integer, format: int32}
+            location:
+              type: string
+              enum: [footer, inline, resolved]
+            mediaType: {type: string}
+            fileSize: {type: integer, format: int64}
+            comment: {type: string}
+          additionalProperties: true
+        operations:
+          type: array
+          items:
+            type: object
+            properties:
+              operation:
+                type: string
+                enum: [read, update, delete, create]
+              targetType: {type: string}
+        restrictions:
+          type: object
+          additionalProperties: true
+        _links: {$ref: '#/components/schemas/Links'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+      example:
+        id: '40017'
+        type: page
+        status: current
+        title: Release checklist
+        extensions: {position: 3}
+        version:
+          number: 2
+          when: '2026-03-03T10:15:00.000Z'
+          message: Added rollback step
+          minorEdit: false
+        _links:
+          self: http://localhost:8080/rest/api/content/40017
+          webui: /spaces/OPS/pages/40017
+          tinyui: /x/40017
+        _expandable:
+          space: /rest/api/space/OPS
+          history: /rest/api/content/40017/history
+          ancestors: ''
+          body: ''
+          children: /rest/api/content/40017/child
+    ContentWrite:
+      type: object
+      description: Body for creating or updating content. Fields aerie reads are listed in behaviour/content.md.
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      required: [type]
+      properties:
+        id: {type: string}
+        type: {$ref: '#/components/schemas/ContentType'}
+        status:
+          type: string
+          enum: [current, draft]
+        title: {type: string, maxLength: 255}
+        space:
+          type: object
+          properties:
+            key: {type: string}
+        ancestors:
+          type: array
+          items:
+            type: object
+            required: [id]
+            properties:
+              id: {type: string}
+        container:
+          type: object
+          properties:
+            id: {type: string}
+            type: {type: string}
+        body:
+          type: object
+          properties:
+            storage: {$ref: '#/components/schemas/ContentBody'}
+            editor: {$ref: '#/components/schemas/ContentBody'}
+        version:
+          type: object
+          required: [number]
+          properties:
+            number: {type: integer, format: int32}
+            message: {type: string}
+            minorEdit: {type: boolean}
+        metadata:
+          type: object
+          properties:
+            mediaType: {type: string}
+            comment: {type: string}
+        extensions:
+          type: object
+          properties:
+            location:
+              type: string
+              enum: [footer, inline]
+    ContentPage:
+      type: object
+      x-aerie-sources: [L-0013]
+      required: [results, start, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/Content'}
+        start: {type: integer, format: int32}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}
+    ContentCursorPage:
+      type: object
+      x-aerie-sources: [L-0007, L-0015]
+      required: [results, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/Content'}
+        cursor: {type: string}
+        nextCursor: {type: string}
+        prevCursor: {type: string}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}
+    ContentByType:
+      type: object
+      description: Paged content lists keyed by content type; only expanded types appear.
+      x-aerie-sources: [L-0001, L-0007, L-0014]
+      properties:
+        page: {$ref: '#/components/schemas/ContentPage'}
+        blogpost: {$ref: '#/components/schemas/ContentPage'}
+        comment: {$ref: '#/components/schemas/ContentPage'}
+        attachment: {$ref: '#/components/schemas/ContentPage'}
+        _links: {$ref: '#/components/schemas/Links'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    DescendantPageCount:
+      type: object
+      x-aerie-sources: [L-0005, L-0007]
+      properties:
+        count: {type: integer, format: int64}
+    MacroInstance:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      properties:
+        name: {type: string}
+        body: {type: string}
+        parameters:
+          type: object
+          additionalProperties: {type: string}
+    AttachmentUpload:
+      type: object
+      x-aerie-sources: [L-0001, L-0007, L-0015]
+      required: [file]
+      properties:
+        file:
+          description: One or more files; repeat the part for each.
+          type: array
+          items: {type: string, format: binary}
+        comment:
+          description: One per file, in the same order, or none.
+          type: array
+          items: {type: string}
+        minorEdit: {type: boolean}
+        hidden: {type: boolean}
+    AttachmentDataUpload:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      required: [file]
+      properties:
+        file: {type: string, format: binary}
+        comment: {type: string}
+        minorEdit: {type: boolean}
+    AttachmentExtractedText:
+      type: object
+      x-aerie-sources: [L-0004, L-0007]
+      properties:
+        extractedText: {type: string}
+    LabelPrefix:
+      type: string
+      x-aerie-sources: [L-0007]
+      enum: [global, my, team]
+    Label:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      properties:
+        prefix: {$ref: '#/components/schemas/LabelPrefix'}
+        name: {type: string}
+        id: {type: string}
+        label: {type: string}
+        _links: {$ref: '#/components/schemas/Links'}
+    LabelWrite:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      required: [name]
+      properties:
+        prefix: {$ref: '#/components/schemas/LabelPrefix'}
+        name: {type: string, maxLength: 255}
+    LabelPage:
+      type: object
+      x-aerie-sources: [L-0013, L-0015]
+      required: [results, start, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/Label'}
+        start: {type: integer, format: int32}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}
+    SpaceType:
+      type: string
+      x-aerie-sources: [L-0001, L-0007]
+      enum: [global, personal]
+    SpaceStatus:
+      type: string
+      x-aerie-sources: [L-0001, L-0007]
+      enum: [current, archived]
+    SpaceDescription:
+      type: object
+      x-aerie-sources: [L-0007, L-0015]
+      properties:
+        plain: {$ref: '#/components/schemas/ContentBody'}
+        view: {$ref: '#/components/schemas/ContentBody'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    Space:
+      type: object
+      x-aerie-sources: [L-0001, L-0007, L-0014, L-0015]
+      properties:
+        id: {type: integer, format: int64}
+        key: {type: string}
+        name: {type: string}
+        type: {$ref: '#/components/schemas/SpaceType'}
+        status: {$ref: '#/components/schemas/SpaceStatus'}
+        description: {$ref: '#/components/schemas/SpaceDescription'}
+        homepage: {$ref: '#/components/schemas/Content'}
+        icon: {$ref: '#/components/schemas/Icon'}
+        metadata:
+          type: object
+          properties:
+            labels: {$ref: '#/components/schemas/LabelPage'}
+          additionalProperties: true
+        creator: {$ref: '#/components/schemas/User'}
+        creationDate: {type: string, format: date-time}
+        lastModifier: {$ref: '#/components/schemas/User'}
+        lastModificationDate: {type: string, format: date-time}
+        _links: {$ref: '#/components/schemas/Links'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    SpaceWrite:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      required: [key, name]
+      properties:
+        key: {type: string}
+        name: {type: string, maxLength: 200}
+        description:
+          type: object
+          properties:
+            plain: {$ref: '#/components/schemas/ContentBody'}
+        homepage:
+          type: object
+          properties:
+            id: {type: string}
+    PersonalSpaceWrite:
+      type: object
+      x-aerie-sources: [L-0003, L-0007]
+      properties:
+        description:
+          type: object
+          properties:
+            plain: {$ref: '#/components/schemas/ContentBody'}
+        isPrivate: {type: boolean}
+        private:
+          type: boolean
+          description: Same meaning as `isPrivate`; `isPrivate` wins when both are sent.
+    SpacePage:
+      type: object
+      x-aerie-sources: [L-0013]
+      required: [results, start, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/Space'}
+        start: {type: integer, format: int32}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}
+    UserPage:
+      type: object
+      x-aerie-sources: [L-0013]
+      required: [results, start, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/User'}
+        start: {type: integer, format: int32}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}
+    GroupPage:
+      type: object
+      x-aerie-sources: [L-0013]
+      required: [results, start, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/Group'}
+        start: {type: integer, format: int32}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}
+    ContainerSummary:
+      type: object
+      x-aerie-sources: [L-0007]
+      properties:
+        title: {type: string}
+        displayUrl: {type: string}
+    SearchResult:
+      type: object
+      x-aerie-sources: [L-0007, L-0016]
+      properties:
+        content: {$ref: '#/components/schemas/Content'}
+        title: {type: string}
+        excerpt: {type: string}
+        url: {type: string}
+        resultParentContainer: {$ref: '#/components/schemas/ContainerSummary'}
+        resultGlobalContainer: {$ref: '#/components/schemas/ContainerSummary'}
+        entityType: {type: string}
+        iconCssClass: {type: string}
+        lastModified: {type: string, format: date-time}
+        friendlyLastModified: {type: string}
+    SearchPage:
+      type: object
+      x-aerie-sources: [L-0007, L-0013]
+      required: [results, start, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/SearchResult'}
+        start: {type: integer, format: int32}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        totalSize: {type: integer, format: int32}
+        cqlQuery: {type: string}
+        searchDuration: {type: integer, format: int32}
+        archivedResultCount: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}
+    ServerInformation:
+      type: object
+      x-aerie-sources: [L-0002, L-0007]
+      properties:
+        baseUrl: {type: string}
+        version: {type: string}
+        buildNumber: {type: integer, format: int32}
+        marketplaceBuildNumber: {type: integer, format: int32}
+        buildDate: {type: string}
+    LongTaskSubmission:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      properties:
+        id: {type: string}
+        links:
+          type: object
+          properties:
+            status: {type: string}
+          additionalProperties: {type: string}
+    LongTaskStatus:
+      type: object
+      x-aerie-sources: [L-0001, L-0007]
+      properties:
+        id: {type: string}
+        name: {$ref: '#/components/schemas/Message'}
+        elapsedTime: {type: integer, format: int64}
+        percentageComplete: {type: integer, format: int32, minimum: 0, maximum: 100}
+        successful: {type: boolean}
+        messages:
+          type: array
+          items: {$ref: '#/components/schemas/Message'}
+        _links: {$ref: '#/components/schemas/Links'}
+        _expandable: {$ref: '#/components/schemas/Expandable'}
+    LongTaskPage:
+      type: object
+      x-aerie-sources: [L-0013]
+      required: [results, start, limit, size]
+      properties:
+        results:
+          type: array
+          items: {$ref: '#/components/schemas/LongTaskStatus'}
+        start: {type: integer, format: int32}
+        limit: {type: integer, format: int32}
+        size: {type: integer, format: int32}
+        _links: {$ref: '#/components/schemas/Links'}

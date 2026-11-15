@@ -19,9 +19,9 @@ Only two things reach the builders: tagged contract releases from here, and blac
 | Contract | Surface | Notes |
 |---|---|---|
 | `contracts/aerie/openapi.yaml` | Aerie's own API, `/api/v1` | Starts as an as-is export of the current app, then evolves here |
-| `contracts/datacenter/openapi.yaml` | Confluence Data Center compatible API, `/rest/api` and `/rest/oauth2` | One contract for Data Center 9.0 and later: the published specs only add operations from 9.0.1 (111) to 11.1.0 (183) |
-| `contracts/cloud/v1/openapi.yaml` | Confluence Cloud v1 compatible API, `/wiki/rest/api` | After Data Center |
-| `contracts/cloud/v2/openapi.yaml` | Confluence Cloud v2 compatible API, `/wiki/api/v2` | After Data Center |
+| `contracts/datacenter/openapi.yaml` | Data Center compatible API, `/rest/api` and `/rest/oauth2` | One contract for Data Center 9.0 and later: the published specs only add operations from 9.0.1 (111) to 11.1.0 (183) |
+| `contracts/cloud/v1/openapi.yaml` | Cloud v1 compatible API, `/wiki/rest/api` | After Data Center |
+| `contracts/cloud/v2/openapi.yaml` | Cloud v2 compatible API, `/wiki/api/v2` | After Data Center |
 
 ## Layout
 
@@ -53,12 +53,12 @@ A builder who needs an answer the contract doesn't give files it in `questions/`
 
 ## Status
 
-Phase 1 of the roadmap has not started. First tasks:
+Phase 1 of the roadmap is under way. First tasks:
 
 - [ ] Receive the as-is export of aerie's API from a build session and commit it as `contracts/aerie/openapi.yaml`
-- [ ] Write the Data Center T1 behaviour specs: content, spaces, search and CQL, attachments, labels, versions, users
-- [ ] Write `contracts/datacenter/openapi.yaml` for T1
-- [ ] Write the storage format behaviour spec and the first samples
+- [x] Write the Data Center T1 behaviour specs: content, spaces, search and CQL, attachments, labels, versions, users
+- [x] Write `contracts/datacenter/openapi.yaml` for T1
+- [x] Write the storage format behaviour spec and the first samples
 - [ ] Tag `contracts-v1`
 
 ## License

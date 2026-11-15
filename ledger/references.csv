@@ -1,13 +1,25 @@
 id,title,url,version,retrieved,sha256,read_by,used_for
-L-0001,Confluence Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/9.0.1.swagger.v3.json,9.0.1,2026-11-15,bb78eb2443b165b92260de7aff9d8f7609d29220ec9343caa826a6e7c04a8b50,planning,roadmap sizing
-L-0002,Confluence Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/9.2.4.swagger.v3.json,9.2.4,2026-11-15,32bb4f8ac43e05d14a552b686d709e06f85dde0ba7dec6baaa3fbaa40abe14e8,planning,roadmap sizing
-L-0003,Confluence Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/9.5.1.swagger.v3.json,9.5.1,2026-11-15,981411865d4240336b66f7f69efcd52861861c58b965b434efa7e404c1e548da,planning,roadmap sizing
-L-0004,Confluence Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/10.0.1.swagger.v3.json,10.0.1,2026-11-15,83bcfb88afd9339ad2b571380820ca1ce4a2a7ad54c1f0745deab59eade33134,planning,roadmap sizing
-L-0005,Confluence Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/10.2.20.swagger.v3.json,10.2.20,2026-11-15,8b104a812f2ed58ff07c35218bc0d0902e4b1ea05085358216562645ee885c50,planning,roadmap sizing
-L-0006,Confluence Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/11.0.0.swagger.v3.json,11.0.0,2026-11-15,55ef3357e99e4bd2cfe5d0a9302b87e8e9c7b55ec49a96c77a0844b5997c2498,planning,roadmap sizing
-L-0007,Confluence Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/11.1.0.swagger.v3.json,11.1.0,2026-11-15,06497ea56915b443ad84e0f371774691a3dbe6dbf39f5855dac501ce965eda8b,planning,roadmap sizing
-L-0008,Confluence Cloud REST API v1 spec,https://dac-static.atlassian.com/cloud/confluence/swagger.v3.json,1.0.0,2026-11-15,f80279e4beace901a20174044ff3dc1cf047ea9486c3dd6eff57e33e4161bf12,planning,roadmap sizing
-L-0009,Confluence Cloud REST API v2 spec,https://dac-static.atlassian.com/cloud/confluence/openapi-v2.v3.json,2.0.0,2026-11-15,40535e2a2c01547d53d824d68299098c9073e5bf7ed98a71634706759becfa31,planning,roadmap sizing
-L-0010,Confluence Cloud REST API v2 introduction,https://developer.atlassian.com/cloud/confluence/rest/v2/intro/,,2026-11-15,,planning,paging and auth summary
-L-0011,Confluence Data Center REST API reference,https://developer.atlassian.com/server/confluence/rest/,,2026-11-15,,planning,finding the published spec files
+L-0001,Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/9.0.1.swagger.v3.json,9.0.1,2026-11-15,bb78eb2443b165b92260de7aff9d8f7609d29220ec9343caa826a6e7c04a8b50,planning,roadmap sizing
+L-0002,Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/9.2.4.swagger.v3.json,9.2.4,2026-11-15,32bb4f8ac43e05d14a552b686d709e06f85dde0ba7dec6baaa3fbaa40abe14e8,planning,roadmap sizing
+L-0003,Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/9.5.1.swagger.v3.json,9.5.1,2026-11-15,981411865d4240336b66f7f69efcd52861861c58b965b434efa7e404c1e548da,planning,roadmap sizing
+L-0004,Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/10.0.1.swagger.v3.json,10.0.1,2026-11-15,83bcfb88afd9339ad2b571380820ca1ce4a2a7ad54c1f0745deab59eade33134,planning,roadmap sizing
+L-0005,Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/10.2.20.swagger.v3.json,10.2.20,2026-11-15,8b104a812f2ed58ff07c35218bc0d0902e4b1ea05085358216562645ee885c50,planning,roadmap sizing
+L-0006,Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/11.0.0.swagger.v3.json,11.0.0,2026-11-15,55ef3357e99e4bd2cfe5d0a9302b87e8e9c7b55ec49a96c77a0844b5997c2498,planning,roadmap sizing
+L-0007,Data Center REST API spec,https://dac-static.atlassian.com/server/confluence/11.1.0.swagger.v3.json,11.1.0,2026-11-15,06497ea56915b443ad84e0f371774691a3dbe6dbf39f5855dac501ce965eda8b,planning,roadmap sizing
+L-0008,Cloud REST API v1 spec,https://dac-static.atlassian.com/cloud/confluence/swagger.v3.json,1.0.0,2026-11-15,f80279e4beace901a20174044ff3dc1cf047ea9486c3dd6eff57e33e4161bf12,planning,roadmap sizing
+L-0009,Cloud REST API v2 spec,https://dac-static.atlassian.com/cloud/confluence/openapi-v2.v3.json,2.0.0,2026-11-15,40535e2a2c01547d53d824d68299098c9073e5bf7ed98a71634706759becfa31,planning,roadmap sizing
+L-0010,Cloud REST API v2 introduction,https://developer.atlassian.com/cloud/confluence/rest/v2/intro/,,2026-11-15,,planning,paging and auth summary
+L-0011,Data Center REST API reference,https://developer.atlassian.com/server/confluence/rest/,,2026-11-15,,planning,finding the published spec files
 L-0012,OpenAPI Specification versions,https://spec.openapis.org/oas/,,2026-11-15,,planning,choice of OpenAPI 3.0.3
+L-0013,Data Center REST API: pagination,https://developer.atlassian.com/server/confluence/pagination-in-the-rest-api/,,2026-11-15,,spec-session-p1,paged response envelope and next/prev links
+L-0014,Data Center REST API: expansions,https://developer.atlassian.com/server/confluence/expansions-in-the-rest-api/,,2026-11-15,,spec-session-p1,"expand syntax, _expandable, default expansions"
+L-0015,Data Center REST API examples,https://developer.atlassian.com/server/confluence/confluence-rest-api-examples/,,2026-11-15,,spec-session-p1,"content, user and link field names; create/update bodies; attachment upload parts and XSRF header; scan response fields"
+L-0016,Data Center: advanced searching using CQL,https://developer.atlassian.com/server/confluence/advanced-searching-using-cql/,,2026-11-15,,spec-session-p1,"CQL operators, keywords, reserved words and characters, field list"
+L-0017,Data Center: CQL field reference,https://developer.atlassian.com/server/confluence/cql-field-reference/,,2026-11-15,,spec-session-p1,"CQL fields, their operators and value types"
+L-0018,Data Center: CQL function reference,https://developer.atlassian.com/server/confluence/cql-function-reference/,,2026-11-15,,spec-session-p1,CQL functions and the inc format
+L-0019,Data Center: performing text searches using CQL,https://developer.atlassian.com/server/confluence/performing-text-searches-using-cql/,,2026-11-15,,spec-session-p1,"text search syntax: phrases, wildcards, fuzzy"
+L-0020,Data Center storage format,https://confluence.atlassian.com/doc/confluence-storage-format-790796544.html,11.0,2026-11-15,,spec-session-p1,"storage format elements, attributes and allowed values"
+L-0021,Aerie sample: storage text blocks,samples/storage/01-text-blocks.xml,,2026-11-15,364010257f3d91fed10850009640b35bf60822911f46f41394c46cdde042eaf3,spec-session-p1,"our own sample, storage round trip"
+L-0022,Aerie sample: storage links and images,samples/storage/02-links-images.xml,,2026-11-15,b53817e9e5cb801f4ab62675d3654c70242344c3ba2ad53a62f1d77bb2dbabc9,spec-session-p1,"our own sample, storage round trip"
+L-0023,Aerie sample: storage tasks and layout,samples/storage/03-tasks-layout.xml,,2026-11-15,ac8e600be7e920fa805f819ecf085be223edd54a4244170f7a7c157b1a1870ca,spec-session-p1,"our own sample, storage round trip"
+L-0024,Aerie sample: storage macros and opaque nodes,samples/storage/04-macros-opaque.xml,,2026-11-15,8538260faf600ec6f84853ace5970017866d5c91e256fc95d25ccb37f5a93bff,spec-session-p1,"our own sample, storage round trip and opaque node"

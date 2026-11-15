@@ -1,0 +1,27 @@
+<ac:layout>
+  <ac:layout-section ac:type="two_right_sidebar">
+    <ac:layout-cell>
+      <h2>Today</h2>
+      <ac:task-list>
+        <ac:task>
+          <ac:task-id>1</ac:task-id>
+          <ac:task-status>complete</ac:task-status>
+          <ac:task-body>Refill the rain barrel</ac:task-body>
+        </ac:task>
+        <ac:task>
+          <ac:task-id>2</ac:task-id>
+          <ac:task-status>incomplete</ac:task-status>
+          <ac:task-body>Repot the lemon tree <ac:emoticon ac:name="warning" /></ac:task-body>
+        </ac:task>
+      </ac:task-list>
+    </ac:layout-cell>
+    <ac:layout-cell>
+      <p><ac:emoticon ac:name="information" /> Tasks reset at midnight.</p>
+    </ac:layout-cell>
+  </ac:layout-section>
+  <ac:layout-section ac:type="single">
+    <ac:layout-cell>
+      <p><ac:placeholder>Add tomorrow's tasks here.</ac:placeholder></p>
+    </ac:layout-cell>
+  </ac:layout-section>
+</ac:layout>
