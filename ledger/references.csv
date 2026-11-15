@@ -11,3 +11,11 @@ L-0009,Cloud REST API v2 spec,https://dac-static.atlassian.com/cloud/confluence/
 L-0010,Cloud REST API v2 introduction,https://developer.atlassian.com/cloud/confluence/rest/v2/intro/,,2026-11-15,,planning,paging and auth summary
 L-0011,Data Center REST API reference,https://developer.atlassian.com/server/confluence/rest/,,2026-11-15,,planning,finding the published spec files
 L-0012,OpenAPI Specification versions,https://spec.openapis.org/oas/,,2026-11-15,,planning,choice of OpenAPI 3.0.3
+L-0013,Data Center REST API: pagination,https://developer.atlassian.com/server/confluence/pagination-in-the-rest-api/,,2026-11-15,,spec-session-p1,paged response envelope and next/prev links
+L-0014,Data Center REST API: expansions,https://developer.atlassian.com/server/confluence/expansions-in-the-rest-api/,,2026-11-15,,spec-session-p1,"expand syntax, _expandable, default expansions"
+L-0015,Data Center REST API examples,https://developer.atlassian.com/server/confluence/confluence-rest-api-examples/,,2026-11-15,,spec-session-p1,"content, user and link field names; create/update bodies; attachment upload parts and XSRF header; scan response fields"
+L-0016,Data Center: advanced searching using CQL,https://developer.atlassian.com/server/confluence/advanced-searching-using-cql/,,2026-11-15,,spec-session-p1,"CQL operators, keywords, reserved words and characters, field list"
+L-0017,Data Center: CQL field reference,https://developer.atlassian.com/server/confluence/cql-field-reference/,,2026-11-15,,spec-session-p1,"CQL fields, their operators and value types"
+L-0018,Data Center: CQL function reference,https://developer.atlassian.com/server/confluence/cql-function-reference/,,2026-11-15,,spec-session-p1,CQL functions and the inc format
+L-0019,Data Center: performing text searches using CQL,https://developer.atlassian.com/server/confluence/performing-text-searches-using-cql/,,2026-11-15,,spec-session-p1,"text search syntax: phrases, wildcards, fuzzy"
+L-0020,Data Center storage format,https://confluence.atlassian.com/doc/confluence-storage-format-790796544.html,11.0,2026-11-15,,spec-session-p1,"storage format elements, attributes and allowed values"
