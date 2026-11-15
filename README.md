@@ -60,6 +60,7 @@ Phase 1 of the roadmap is under way. First tasks:
 - [x] Write `contracts/datacenter/openapi.yaml` for T1
 - [x] Write the storage format behaviour spec and the first samples
 - [ ] Tag `contracts-v1`
+- [x] Write the identity spec and its build plan (`behaviour/identity.md`, `behaviour/identity-plan.md`) and the `/rest/oauth2` contract
 
 ## License
 
