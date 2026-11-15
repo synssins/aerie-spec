@@ -30,7 +30,8 @@ An attachment is content with `type: attachment` and these differences:
 
 - `multipart/form-data` with the XSRF header from `common.md`.
 - The content may be a page or a folder (see the tree mapping in `content.md`); clients cannot tell them apart, so both accept attachments (question Q-0006).
-- One or more parts named `file`, each with a file name in its `Content-Disposition`. The part's `Content-Type` becomes the media type; when absent or `application/octet-stream`, aerie guesses from the file name.
+- One or more parts named `file`. Each one is a file: its bytes, as received, are the attachment's content. The part's `Content-Type` becomes the media type; when absent or `application/octet-stream`, aerie guesses from the file name.
+- A `file` part with no file name in its `Content-Disposition` is still a file (question Q-0018). Clients generated from the published files send `file` this way, because those files declare it as a plain string field. Such a part is named `attachment-` followed by the new attachment's id, so it never clashes with an existing name; the client can rename it later. Its `Content-Type`, if any, is ignored, and its media type is `application/octet-stream`.
 - Optional parts named `comment`: if any are sent, there must be one per file, in the same order; otherwise `400`.
 - Optional parts `minorEdit` (`true`/`false`) and `hidden` (`true`/`false`) apply to all files in the request.
 - A file whose name already exists on the content gives `400` unless `allowDuplicated=true`, in which case it becomes a new version of the existing attachment.
@@ -50,8 +51,8 @@ An attachment is content with `type: attachment` and these differences:
 
 `POST /rest/api/content/{id}/child/attachment/{attachmentId}/data`
 
-- Same multipart rules as upload, with exactly one `file` part, and optional `comment` and `minorEdit` parts.
-- Makes a new version of the attachment. The file name in the part becomes the new title.
+- Same multipart rules as upload, with exactly one `file` part, and optional `comment` and `minorEdit` parts. A `file` part without a file name counts (question Q-0018). Zero `file` parts, or more than one, gives `400`.
+- Makes a new version of the attachment. The file name in the part becomes the new title. When the part has no file name, the title and media type stay as they are, and any `Content-Type` on the part is ignored.
 - Result: `200` with the attachment.
 
 ## Moving
