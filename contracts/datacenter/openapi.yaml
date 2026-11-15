@@ -166,8 +166,8 @@ paths:
       tags: [content]
       operationId: scanContent
       summary: Walk all content with a cursor
-      description: Cursor-paged walk over every item the caller can see. See behaviour/content.md and behaviour/common.md.
-      x-aerie-sources: [L-0001, L-0003, L-0007, L-0015]
+      description: Cursor-paged walk over every item the caller can see. `nextCursor` and `prevCursor` are strings, as from 9.5.1. See behaviour/content.md and behaviour/common.md (Paging).
+      x-aerie-sources: [L-0001, L-0002, L-0003, L-0004, L-0005, L-0006, L-0007, L-0015]
       x-aerie-since: 9.0.1
       x-aerie-tier: T1
       parameters:
@@ -574,7 +574,7 @@ paths:
       tags: [attachments]
       operationId: createAttachments
       summary: Upload attachments
-      description: Multipart upload of one or more files to a page or folder. Needs the XSRF header. See behaviour/attachments.md.
+      description: Multipart upload of one or more files to a page or folder. A `file` part without a file name is accepted. Needs the XSRF header. See behaviour/attachments.md.
       x-aerie-sources: [L-0001, L-0007, L-0015]
       x-aerie-since: 9.0.1
       x-aerie-tier: T1
@@ -659,7 +659,7 @@ paths:
       tags: [attachments]
       operationId: updateAttachmentData
       summary: Upload new bytes for an attachment
-      description: Adds a new version with the uploaded file. Needs the XSRF header. See behaviour/attachments.md.
+      description: Adds a new version with the uploaded file. A `file` part without a file name is accepted and keeps the title. Needs the XSRF header. See behaviour/attachments.md.
       x-aerie-sources: [L-0001, L-0007]
       x-aerie-since: 9.0.1
       x-aerie-tier: T1
@@ -2140,15 +2140,19 @@ components:
         _links: {$ref: '#/components/schemas/Links'}
     ContentCursorPage:
       type: object
-      x-aerie-sources: [L-0007, L-0015]
+      x-aerie-sources: [L-0001, L-0003, L-0007, L-0015]
       required: [results, limit, size]
       properties:
         results:
           type: array
           items: {$ref: '#/components/schemas/Content'}
         cursor: {type: string}
-        nextCursor: {type: string}
-        prevCursor: {type: string}
+        nextCursor:
+          type: string
+          description: Always a string, never an object. See behaviour/common.md (Paging).
+        prevCursor:
+          type: string
+          description: Always a string, never an object. See behaviour/common.md (Paging).
         limit: {type: integer, format: int32}
         size: {type: integer, format: int32}
         _links: {$ref: '#/components/schemas/Links'}
@@ -2183,7 +2187,7 @@ components:
       required: [file]
       properties:
         file:
-          description: One or more files; repeat the part for each.
+          description: One or more files; repeat the part for each. A part without a file name in its Content-Disposition is accepted. See behaviour/attachments.md.
           type: array
           items: {type: string, format: binary}
         comment:
@@ -2197,7 +2201,10 @@ components:
       x-aerie-sources: [L-0001, L-0007]
       required: [file]
       properties:
-        file: {type: string, format: binary}
+        file:
+          type: string
+          format: binary
+          description: Exactly one. A part without a file name in its Content-Disposition is accepted. See behaviour/attachments.md.
         comment: {type: string}
         minorEdit: {type: boolean}
     AttachmentExtractedText:

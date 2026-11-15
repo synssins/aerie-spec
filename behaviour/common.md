@@ -71,6 +71,7 @@ A paged response is an object with:
 
 - The first request sends no `cursor`. Each response carries `cursor` (the one applied), and `nextCursor` / `prevCursor` where another page exists in that direction, plus `limit`, `size`, `results` and `_links` (`next` / `prev` built with the cursor).
 - Cursors are opaque strings to the client. Aerie encodes the sort key of the last item; a cursor that cannot be decoded gives `400`.
+- `cursor`, `nextCursor` and `prevCursor` are always JSON strings, never objects (question Q-0017). This is the shape from 9.5.1 on. The 9.0.1 published file declares `nextCursor` and `prevCursor` as an object with no position in it, so clients generated from that file in strict mode reject these responses; no single value satisfies both declarations, and the string shape wins.
 - Changes made between requests may or may not show up in later pages; a cursor never makes an item appear twice.
 
 ## Expansion
