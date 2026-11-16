@@ -32,7 +32,7 @@ Question Q-0030. Aerie builds the material for the model in this order, and noth
 
 Not sent: comments, ratings, attachments, page history, other people's names beyond what is in the page text, and anything about pages that were dropped. The model does not get tools, cannot fetch anything, and cannot run further searches.
 
-Nothing is sent anywhere except the configured model endpoint. The question, the page texts and the answer are not stored, not cached, and not written to any log.
+Nothing is sent anywhere except the configured model endpoint. The page texts and the answer are not stored, not cached, and not written to any log. The question is kept in exactly one place: the audit entry for the call (see Audit, question Q-0032).
 
 ## The guardrails
 
@@ -62,7 +62,27 @@ A model that fails or exceeds `timeoutSeconds` gives `503`; nothing is retried a
 
 ## Audit
 
-Every call that passes the availability check writes one audit entry (question Q-0032): action `search.answer`, actor, time, `via`. No target. The question, the page texts, the answer and the page ids are not written to the audit log or the application log. Refusals by the rate limit are audited the same way, so an Admin can see who hit the limit.
+Question Q-0032 (revised). Every call by a signed-in person writes one audit entry with action `search.answer`, whatever its outcome. Calls without a person (guests, API tokens) are not recorded beyond the usual request log.
+
+The entry is an ordinary audit entry (actor, time, `via`), plus an `aiSearch` record (`AuditEntryDto.aiSearch`, planned):
+
+- `question`: the question exactly as sent, before trimming, cut to the first 2000 characters. `questionLength` is the length as sent, so a cut is visible. Questions over 500 characters are still refused (`400`) but are recorded, because long questions are where injection attempts show.
+- `outcome`: `answered`, `no_answer`, `nothing_found`, `refused` (any `400`, `403`, `404` or `422`: bad question, feature not available to the person, unreadable or sensitive space), `rate_limited` (`429`), or `failed` (`503`, the model failed or timed out).
+- `spaceId`: the space filter, if one was sent.
+- `pages`: the pages given to the model, each as `pageId` and the page `version` sent, in the order sent. Empty when the model was not called.
+
+Not recorded: page text, and the answer text. The page ids with their versions are enough to rebuild exactly what the model saw from page history, so storing the text would add a second copy of page content in the audit log without adding evidence. The answer is left out for the same reason: it is drawn from page content.
+
+Because it is part of the audit entry itself, the record:
+
+- is readable only by those who can read the audit log (Admins);
+- is covered by the audit chain (`audit.verify`), so it cannot be changed unnoticed;
+- is kept as long as other audit entries are, with no separate retention;
+- ships to the configured log targets (SIEM) with every other audit entry.
+
+The question text is never written to the application log.
+
+People are told before they ask: the ask box shows, next to the input, "Questions you ask here are recorded with your name and can be read by administrators." The text is part of the feature, not a setting.
 
 ## Lab cases
 
@@ -82,13 +102,18 @@ The lab points the AI settings at its own stub model endpoint, which records eve
 - `ai.search.input_bound`: with `maxInputChars` small, the recorded request stays within it.
 - `ai.search.rate_limit`: past `userPerMinute`, `429` with `Retry-After`, and the stub receives no request.
 - `ai.search.model_down`: the stub does not answer within `timeoutSeconds`: `503`.
-- `ai.search.audit`: each call writes one `search.answer` entry, and no audit entry or log line contains the question or any page text (marker strings again).
+- `ai.search.audit`: an answered call writes one `search.answer` entry whose `aiSearch` holds the exact question, `outcome: answered`, and the ids and versions of the pages the stub received, in order. No audit entry or log line contains any page text or the answer (marker strings again), and no application log line contains the question.
+- `ai.search.audit.outcomes`: a 501-character question (`400`), a call with the feature off for the person (`403`), a call past the rate limit (`429`) and a model timeout (`503`) each write one entry with `outcome` `refused`, `refused`, `rate_limited` and `failed`, each with the question.
+- `ai.search.audit.cap`: a 3000-character question is recorded as its first 2000 characters with `questionLength: 3000`.
+- `ai.search.audit.readers`: a user who is not an administrator cannot read the audit log (`403`); `audit.verify` stays valid after AI search calls.
+- `ai.search.audit.shipped`: a log target receives the `search.answer` entries with their `aiSearch` record.
+- `ai.search.notice`: the ask box in the web app shows the recording notice before anything is typed.
 - `ai.search.no_other_egress`: during the run, aerie makes no outbound request other than to the stub (the lab's network capture).
 
 ## Build slices
 
 One pull request each:
 
-1. **A1: Gate and material.** `search.answer` with availability (`features.search`, default `Off`), `MeResponse.aiSearch`, request checks, the material builder (search as the person, sensitive and permission filtering, 8 pages, `maxInputChars`), limits, audit, and `nothing_found`. Until A2 lands, a call with material answers `503`. Lab: `ai.search.off_by_default`, `admins_only`, `guest.refused`, `token.refused`, `space_filter`, `nothing_found`, `rate_limit`, `audit`.
+1. **A1: Gate and material.** `search.answer` with availability (`features.search`, default `Off`), `MeResponse.aiSearch`, request checks, the material builder (search as the person, sensitive and permission filtering, 8 pages, `maxInputChars`), limits, the audit entry with its `aiSearch` record (question, outcome, pages, cap, shipping to log targets), and `nothing_found`. Until A2 lands, a call with material answers `503` (`outcome: failed`). Lab: `ai.search.off_by_default`, `admins_only`, `guest.refused`, `token.refused`, `space_filter`, `nothing_found`, `rate_limit`, `audit`, `audit.outcomes`, `audit.cap`, `audit.readers`, `audit.shipped`.
 2. **A2: The answer.** The fixed prompt, fenced page data, the model call through aerie's existing AI client, citation checking, `answered` and `no_answer`, timeouts. Lab: the remaining cases.
-3. **A3: Web app.** The "ask" box on the search page, shown only when `MeResponse.aiSearch` is true, the plain-text answer, the source links, and the fixed texts. Lab: `ai.search.injection` repeated through the web app.
+3. **A3: Web app.** The "ask" box on the search page, shown only when `MeResponse.aiSearch` is true, the recording notice, the plain-text answer, the source links, and the fixed texts. Lab: `ai.search.injection` repeated through the web app, `ai.search.notice`.

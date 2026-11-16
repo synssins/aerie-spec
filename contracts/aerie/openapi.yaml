@@ -3460,6 +3460,118 @@ paths:
       security:
         - cookieAuth: []
       "x-kb-api-token": "closed"
+  "/api/v1/imports/groups/{id}":
+    get:
+      tags:
+        - "imports"
+      operationId: "import.group.read"
+      description: "Not yet built. One group of related documents in an import batch, with its reason and merge proposals. Question Q-0033. See behaviour/import-grouping.md."
+      "x-kb-action": "import.group.read"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ImportGroupDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/imports/groups/{id}/items/{itemId}":
+    delete:
+      tags:
+        - "imports"
+      operationId: "import.group.remove"
+      description: "Not yet built. Moves a document out of the group. A merge proposal that included it is rebuilt; a group left with one document is dissolved. See behaviour/import-grouping.md."
+      "x-kb-action": "import.group.remove"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "itemId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/imports/groups/{id}/separate":
+    post:
+      tags:
+        - "imports"
+      operationId: "import.group.separate"
+      description: "Not yet built. Keep separate: drops the group's merge proposals; each document is reviewed on its own. See behaviour/import-grouping.md."
+      "x-kb-action": "import.group.separate"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/imports/items/{id}":
     delete:
       tags:
@@ -3673,6 +3785,15 @@ paths:
           schema:
             type: "string"
             format: "uuid"
+        - name: "modified"
+          in: "query"
+          required: false
+          description: "Not yet built. The file's last-modified time as the browser reported it. See behaviour/import-grouping.md and question Q-0036."
+          "x-aerie-status": "planned"
+          schema:
+            type: "string"
+            format: "date-time"
+            nullable: true
       requestBody:
         content:
           "*/*":
@@ -3687,6 +3808,44 @@ paths:
             "application/json":
               schema:
                 "$ref": "#/components/schemas/ImportFileDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/imports/{id}/groups":
+    get:
+      tags:
+        - "imports"
+      operationId: "import.group.list"
+      description: "Not yet built. The groups of related documents in a batch. ready is false until every document has finished drafting. Question Q-0033. See behaviour/import-grouping.md."
+      "x-kb-action": "import.group.list"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/ImportGroupListDto"
         "401":
           description: "Not signed in, or a bad token"
         "403":
@@ -6987,6 +7146,54 @@ components:
         at:
           type: "string"
           format: "date-time"
+    AuditAiSearchDto:
+      type: "object"
+      description: "One AI search, recorded in its audit entry. No page text and no answer text. See behaviour/ai-search.md and question Q-0032."
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        question:
+          type: "string"
+          description: "The question as sent, cut to the first 2000 characters."
+        questionLength:
+          type: "integer"
+          format: "int32"
+          description: "Length of the question as sent."
+        outcome:
+          "$ref": "#/components/schemas/AuditAiSearchOutcome"
+        spaceId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+        pages:
+          type: "array"
+          description: "The pages given to the model, in the order sent. Empty when the model was not called."
+          items:
+            "$ref": "#/components/schemas/AuditAiSearchPageDto"
+    AuditAiSearchOutcome:
+      type: "string"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      enum:
+        - "answered"
+        - "no_answer"
+        - "nothing_found"
+        - "refused"
+        - "rate_limited"
+        - "failed"
+    AuditAiSearchPageDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        pageId:
+          type: "string"
+          format: "uuid"
+        version:
+          type: "string"
     AuditEntryDto:
       type: "object"
       properties:
@@ -7012,6 +7219,12 @@ components:
         token:
           type: "string"
           nullable: true
+        aiSearch:
+          nullable: true
+          description: "Not yet built. Only on search.answer entries: the question, outcome and pages given to the model. Covered by the audit chain and shipped to log targets with the entry. See behaviour/ai-search.md and question Q-0032."
+          "x-aerie-status": "planned"
+          allOf:
+            - "$ref": "#/components/schemas/AuditAiSearchDto"
     AuditVerifyResult:
       type: "object"
       properties:
@@ -7652,6 +7865,15 @@ components:
           type: "string"
           format: "uuid"
           nullable: true
+    ImportDateSource:
+      type: "string"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      enum:
+        - "document"
+        - "upload"
+        - "none"
     ImportFileDto:
       type: "object"
       properties:
@@ -7674,6 +7896,58 @@ components:
           type: "boolean"
         sha256:
           type: "string"
+        modifiedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+          description: "Not yet built. The file's date, used to decide which file is newer. See behaviour/import-grouping.md and question Q-0036."
+          "x-aerie-status": "planned"
+        modifiedFrom:
+          description: "Not yet built. Where modifiedAt came from."
+          "x-aerie-status": "planned"
+          allOf:
+            - "$ref": "#/components/schemas/ImportDateSource"
+    ImportGroupDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        batchId:
+          type: "string"
+          format: "uuid"
+        label:
+          type: "string"
+          description: "The shared system or application tag."
+        reason:
+          type: "string"
+          description: "Why the documents were grouped, written by aerie from the shared tags."
+        itemIds:
+          type: "array"
+          items:
+            type: "string"
+            format: "uuid"
+        separated:
+          type: "boolean"
+        proposals:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/ImportMergeProposalDto"
+    ImportGroupListDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        ready:
+          type: "boolean"
+        groups:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/ImportGroupDto"
     ImportImageRequest:
       type: "object"
       properties:
@@ -7711,6 +7985,18 @@ components:
           items:
             "$ref": "#/components/schemas/ImportSpaceDto"
           nullable: true
+        groupId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+          description: "Not yet built. The group of related documents this draft is in. See behaviour/import-grouping.md."
+          "x-aerie-status": "planned"
+        suggestedTags:
+          type: "array"
+          description: "Not yet built. Tags suggested for this document, matched against existing tags and the inventory. Question Q-0038."
+          "x-aerie-status": "planned"
+          items:
+            "$ref": "#/components/schemas/ImportTagSuggestionDto"
     ImportItemRowDto:
       type: "object"
       properties:
@@ -7751,6 +8037,12 @@ components:
           type: "integer"
           format: "int64"
           nullable: true
+        groupId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+          description: "Not yet built. The group of related documents this draft is in."
+          "x-aerie-status": "planned"
     ImportListDto:
       type: "object"
       properties:
@@ -7773,6 +8065,83 @@ components:
           nullable: true
         canAssist:
           type: "boolean"
+    ImportMergeConflictDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        summary:
+          type: "string"
+          description: "What the documents disagree about. Model text, shown as plain text."
+        chosenItemId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+          description: "The document whose wording is in the merged page. By default the newest; null when there is no default and the reviewer must choose."
+        options:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/ImportMergeOptionDto"
+    ImportMergeOptionDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        itemId:
+          type: "string"
+          format: "uuid"
+        text:
+          type: "string"
+        modifiedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+    ImportMergeProposalDto:
+      type: "object"
+      description: "A proposed merged page. Nothing is saved until the reviewer accepts it with import.merge and then import.accept. See behaviour/import-grouping.md and question Q-0037."
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        version:
+          type: "integer"
+          format: "int32"
+          description: "Changes whenever the proposal is rebuilt; sent back with import.merge."
+        itemIds:
+          type: "array"
+          description: "The near-duplicate documents, newest first."
+          items:
+            type: "string"
+            format: "uuid"
+        state:
+          "$ref": "#/components/schemas/ImportMergeState"
+        title:
+          type: "string"
+          nullable: true
+        contentJson:
+          type: "string"
+          nullable: true
+        sections:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/ImportMergeSectionDto"
+        conflicts:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/ImportMergeConflictDto"
+        invented:
+          type: "array"
+          description: "Statements in the merged page found in none of the documents."
+          items:
+            type: "string"
     ImportMergeRequest:
       type: "object"
       properties:
@@ -7782,6 +8151,54 @@ components:
             type: "string"
             format: "uuid"
           nullable: true
+        proposalId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+          description: "Not yet built. Accept this merge proposal instead of merging itemIds by hand. See behaviour/import-grouping.md and question Q-0037."
+          "x-aerie-status": "planned"
+        proposalVersion:
+          type: "integer"
+          format: "int32"
+          nullable: true
+          description: "Not yet built. The proposal version the reviewer saw; a different current version is 409."
+          "x-aerie-status": "planned"
+        choices:
+          type: "object"
+          nullable: true
+          description: "Not yet built. Conflict id to the id of the document whose wording to keep. A conflict with no default and no choice is 422."
+          "x-aerie-status": "planned"
+          additionalProperties:
+            type: "string"
+            format: "uuid"
+    ImportMergeSectionDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        index:
+          type: "integer"
+          format: "int32"
+        heading:
+          type: "string"
+          nullable: true
+        sourceItemId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+          description: "Null when the model named no document that was sent."
+    ImportMergeState:
+      type: "string"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      enum:
+        - "building"
+        - "ready"
+        - "too_large"
+        - "too_many"
+        - "failed"
     ImportSpaceDto:
       type: "object"
       properties:
@@ -7796,6 +8213,38 @@ components:
           type: "integer"
           format: "int32"
           nullable: true
+    ImportTagKind:
+      type: "string"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      enum:
+        - "system"
+        - "application"
+        - "server"
+        - "topic"
+    ImportTagSuggestionDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        tag:
+          type: "string"
+        kind:
+          "$ref": "#/components/schemas/ImportTagKind"
+        existing:
+          type: "boolean"
+          description: "The tag already exists on pages; its spelling is reused."
+        applicationId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+          description: "The inventory application the tag matched."
+        server:
+          type: "string"
+          nullable: true
+          description: "The inventory server the tag matched."
     InstalledDto:
       type: "object"
       properties:
