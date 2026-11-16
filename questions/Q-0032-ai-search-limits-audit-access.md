@@ -15,11 +15,12 @@ How is AI search rate-limited per person, what does the audit log keep without s
 
 The owner reversed the audit default: question history matters for investigating prompt injection attempts. Limits and access are unchanged.
 
-- Every AI search by a signed-in person is recorded, whatever the outcome, in the audit entry itself (`AuditEntryDto.aiSearch`), not in a linked record. That puts it under the audit chain, the audit log's readers, its retention and its shipping to log targets (SIEM) with no new machinery.
+- Every AI search made with a session is recorded, whatever the outcome, in the audit entry itself (`AuditEntryDto.aiSearch`), not in a linked record. That puts it under the audit chain, the audit log's readers, its retention and its shipping to log targets (SIEM) with no new machinery.
 - Recorded: who asked, when, the question exactly as sent (cut at 2000 characters, with its full length), the outcome (`answered`, `no_answer`, `nothing_found`, `refused`, `rate_limited`, or `failed` for a model error or timeout), the space filter, and the id and version of each page given to the model.
 - Not recorded: page text and the answer text. Page ids with versions rebuild exactly what the model saw from page history; the answer is drawn from page content, and a second copy of that content in the audit log adds no evidence.
 - Readable by Admins only (the audit log's readers). Kept as long as the audit log keeps entries. Never written to the application log.
-- The ask box tells people, before they type, that questions are recorded with their name and can be read by administrators.
+- The AI search screen shows no notice that questions are recorded. This is the owner's decision. A site that must tell its users can do so in its own acceptable-use policy.
+- API tokens on this session-only call: `403` for a valid token, `401` for a bad one (question Q-0039).
 
 ## Earlier answer (superseded for the audit part)
 

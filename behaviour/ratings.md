@@ -29,7 +29,7 @@ Changing a rating replaces it (`updatedAt` changes, `createdAt` stays). Removing
 - "Nobody else" is strict (question Q-0029): a site administrator without the Supervisor or Owner role in that space sees what a reader sees.
 - Nothing a reader can see reveals negatives: there is no total count, no average, and no score. Positive count and solved count only.
 - Someone who cannot read the page gets `404` from every rating call on it. Guests get `401` (question Q-0027).
-- All rating calls are session only (`x-kb-api-token: closed`), so scripts cannot rate or read ratings (question Q-0027).
+- All rating calls are session only (`x-kb-api-token: closed`), so scripts cannot rate or read ratings (question Q-0027). A valid API token on a session-only call gets `403`; an unknown, expired or revoked token gets `401` (question Q-0039).
 
 ## Switching ratings on and off
 
@@ -84,7 +84,7 @@ Same set-up as `comments.md`: a space with a Reader, a Contributor, a Supervisor
 - `ratings.switch.no_override`: site off, space and page on: save is `422`.
 - `ratings.unreadable.hidden`: a person who cannot read the page gets `404`.
 - `ratings.folder.refused`: rating a folder is `422`.
-- `ratings.token.refused`: an API token gets `401` on every rating call.
+- `ratings.token.refused`: a valid API token gets `403` on every rating call; an expired one gets `401`.
 - `ratings.search.unchanged`: search results and their order for a fixed query are the same before and after ten negative ratings on the top hit.
 - `ratings.audit.no_value`: audit entries exist for save and remove and contain neither the value nor the reason.
 

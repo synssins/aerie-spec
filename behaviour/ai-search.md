@@ -11,7 +11,7 @@ The call is `POST /api/v1/search/answer` (`search.answer`) in `contracts/aerie/o
 - It is the existing AI feature `search` ("In-depth search") in the AI settings (`AiSettings.features`, values `Off`, `Admins`, `Everyone`). It is available to a person only when AI is enabled (`AiSettings.enabled`), a model is configured, and `features.search` is `Everyone`, or `Admins` and the person is an administrator.
 - A new install, and an install that has no `search` entry yet, treats it as `Off`. Only an Admin turns it on, through the existing AI settings.
 - It uses the model, endpoint and key an Admin configured in the AI settings, and the existing timeout and output limits (`timeoutSeconds`, `maxTokens`, `temperature`). It has no model settings of its own.
-- Never for guests: no session is `401`. API tokens are refused (`x-kb-api-token: closed`, question Q-0032).
+- Never for guests: no session is `401`. API tokens are refused (`x-kb-api-token: closed`, question Q-0032): a valid API token on a session-only call gets `403`; an unknown, expired or revoked token gets `401` (question Q-0039).
 - When the feature is not available to the caller, the call answers `403`. The web app learns whether to show it from `MeResponse.aiSearch` (planned field), so it does not have to try.
 
 ## The request
@@ -62,7 +62,7 @@ A model that fails or exceeds `timeoutSeconds` gives `503`; nothing is retried a
 
 ## Audit
 
-Question Q-0032 (revised). Every call by a signed-in person writes one audit entry with action `search.answer`, whatever its outcome. Calls without a person (guests, API tokens) are not recorded beyond the usual request log.
+Question Q-0032 (revised). Every call made with a session writes one audit entry with action `search.answer`, whatever its outcome. Calls without a person (guests, API tokens) are not recorded beyond the usual request log.
 
 The entry is an ordinary audit entry (actor, time, `via`), plus an `aiSearch` record (`AuditEntryDto.aiSearch`, planned):
 
@@ -82,8 +82,6 @@ Because it is part of the audit entry itself, the record:
 
 The question text is never written to the application log.
 
-People are told before they ask: the ask box shows, next to the input, "Questions you ask here are recorded with your name and can be read by administrators." The text is part of the feature, not a setting.
-
 ## Lab cases
 
 The lab points the AI settings at its own stub model endpoint, which records every request and answers what each case scripts. Set-up: a space S the person can read, a sensitive space X the person can read, a space P the person cannot read, each with pages matching the word "aurora".
@@ -91,7 +89,7 @@ The lab points the AI settings at its own stub model endpoint, which records eve
 - `ai.search.off_by_default`: on a fresh install, `search.answer` is `403` for an administrator and for a user; `MeResponse.aiSearch` is false.
 - `ai.search.admins_only`: with `search` set to `Admins`, an administrator gets `200` and a user `403`.
 - `ai.search.guest.refused`: no session: `401`.
-- `ai.search.token.refused`: an API token: `401`.
+- `ai.search.token.refused`: a valid API token: `403`; an expired one: `401`.
 - `ai.search.scope`: asking "aurora" sends the stub only pages from S. No text from X or P reaches the stub (the lab searches the recorded request for marker strings planted in X and P).
 - `ai.search.space_filter`: `spaceId` of P is `404`; of X is `422`.
 - `ai.search.answered`: the stub answers citing `[1]`; the response is `answered` with one source, the S page.
@@ -107,7 +105,6 @@ The lab points the AI settings at its own stub model endpoint, which records eve
 - `ai.search.audit.cap`: a 3000-character question is recorded as its first 2000 characters with `questionLength: 3000`.
 - `ai.search.audit.readers`: a user who is not an administrator cannot read the audit log (`403`); `audit.verify` stays valid after AI search calls.
 - `ai.search.audit.shipped`: a log target receives the `search.answer` entries with their `aiSearch` record.
-- `ai.search.notice`: the ask box in the web app shows the recording notice before anything is typed.
 - `ai.search.no_other_egress`: during the run, aerie makes no outbound request other than to the stub (the lab's network capture).
 
 ## Build slices
@@ -116,4 +113,4 @@ One pull request each:
 
 1. **A1: Gate and material.** `search.answer` with availability (`features.search`, default `Off`), `MeResponse.aiSearch`, request checks, the material builder (search as the person, sensitive and permission filtering, 8 pages, `maxInputChars`), limits, the audit entry with its `aiSearch` record (question, outcome, pages, cap, shipping to log targets), and `nothing_found`. Until A2 lands, a call with material answers `503` (`outcome: failed`). Lab: `ai.search.off_by_default`, `admins_only`, `guest.refused`, `token.refused`, `space_filter`, `nothing_found`, `rate_limit`, `audit`, `audit.outcomes`, `audit.cap`, `audit.readers`, `audit.shipped`.
 2. **A2: The answer.** The fixed prompt, fenced page data, the model call through aerie's existing AI client, citation checking, `answered` and `no_answer`, timeouts. Lab: the remaining cases.
-3. **A3: Web app.** The "ask" box on the search page, shown only when `MeResponse.aiSearch` is true, the recording notice, the plain-text answer, the source links, and the fixed texts. Lab: `ai.search.injection` repeated through the web app, `ai.search.notice`.
+3. **A3: Web app.** The "ask" box on the search page, shown only when `MeResponse.aiSearch` is true, the plain-text answer, the source links, and the fixed texts. Lab: `ai.search.injection` repeated through the web app.

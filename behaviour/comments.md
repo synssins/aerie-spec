@@ -19,14 +19,14 @@ The Data Center compatible surface is not changed by this file. Its comment oper
 - "Can read the page" is the same check page reading uses, including any later page restrictions. Someone who cannot read the page gets `404` from every comment call on it, never `403`.
 - Guests get `401` from every comment call, also on pages in spaces readable by anyone. Guests do not see comments at all (question Q-0027).
 - Moderation needs the Supervisor or Owner role in that space. Being a site administrator is not enough on its own (question Q-0024).
-- API tokens: reading the list (`comment.list`) is open to tokens with read access (`x-kb-api-token: read`). Every other comment call is session only (`closed`), so scripts cannot post or moderate (question Q-0027).
+- API tokens: reading the list (`comment.list`) is open to tokens with read access (`x-kb-api-token: read`). Every other comment call is session only (`closed`), so scripts cannot post or moderate (question Q-0027). A valid API token on a session-only call gets `403`; an unknown, expired or revoked token gets `401` (question Q-0039).
 
 ## Switching comments on and off
 
 Comments are switched at three levels. The effective setting for a page is on only if all three are on (question Q-0025):
 
 1. The site: `commentsEnabled` in the feedback settings (`feedback.settings.read` / `feedback.settings.save`, Admins only). Default on.
-2. The space: the existing `commentsEnabled` on the space (`SpaceDto`, `UpdateSpaceRequest`), changed by whoever may change space settings today. Default on.
+2. The space: the existing `commentsEnabled` on the space (`SpaceDto`, `UpdateSpaceRequest`), changed by whoever may change space settings today. Default on. Today the field is stored, returned and editable but nothing acts on it, so using it as the switch changes nothing for existing data.
 3. The page: `commentsEnabled` in the page's feedback settings (`page.feedback.read` / `page.feedback.save`). Changed by the space's Supervisors and Owners. Default on.
 
 "Off" at a higher level cannot be overridden below: a page set on in a space set off has comments off. Each level only ever switches comments off for what is under it.
@@ -142,7 +142,7 @@ Case names are suggestions; the lab owns its suite. The lab needs a space where 
 - `comments.switch.page_by_supervisor`: a Contributor setting the page switch gets `403`; a Supervisor gets `200`.
 - `comments.switch.own_delete_when_off`: with comments off, the author can still delete their comment.
 - `comments.rate_limit`: the 11th comment within a minute is `429` with `Retry-After`.
-- `comments.token.read_only`: an API token lists comments (`200`) but cannot post (`401`).
+- `comments.token.read_only`: an API token lists comments (`200`) but cannot post (`403`); an expired token gets `401` on both.
 - `comments.notify.owner_and_reply`: a comment notifies the page owner; a reply notifies the comment's author; neither notifies the person who wrote it.
 - `comments.audit.no_text`: after create, edit, hide, delete and restore, audit entries exist for each, and no entry contains the comment text.
 - `comments.page.move`: after the page moves to a space where the commenter has no access, the commenter gets `404`.
