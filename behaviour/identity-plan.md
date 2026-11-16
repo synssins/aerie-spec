@@ -58,7 +58,8 @@ Slices 1 and 2 do not depend on OAuth and unblock the lab's Basic and token case
 - `auth.basic.password.ok`: a user without codes reads `/rest/api/user/current` with Basic.
 - `auth.basic.password.wrong`: `401`, `RestError` body.
 - `auth.basic.codes_on.refused`: an administrator with codes gets `401` with the right password; the body equals the wrong-password body.
-- `auth.basic.codes_exempt.ok`: the same administrator, exempted, gets `200`.
+- `auth.basic.codes_exempt.ok`: a user who is not an administrator turns codes on, then gets `401` on Basic with the right password. An administrator exempts that user (`204`), and the same request gets `200`.
+- `auth.basic.codes_exempt.admin_refused`: exempting an administrator, or the emergency administrator account, answers `409` (question Q-0020); Basic with that account's right password still gets `401`.
 - `auth.basic.token_in_password.ok`: Basic with username and a `kbt_` token gets `200`, also for an account with codes on.
 - `auth.basic.token_in_password.wrong_user`: `401`.
 - `auth.basic.lockout`: repeated failures end in `429` with `Retry-After`.
