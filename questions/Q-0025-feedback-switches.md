@@ -18,6 +18,8 @@ Comments and ratings switch on and off at the site, the space and the page, the 
 - Defaults: on at every level. The existing space `commentsEnabled` keeps its current values.
 - Off does not delete anything. Readers no longer see the comments or rating counts, nobody can add or change any, and Supervisors and Owners still see and moderate everything. People can still delete their own comments and remove their own ratings. Switching back on shows what was kept.
 
+Note from the build room: the space's `commentsEnabled` is stored, returned and editable today, but nothing acts on it, so reusing it as the space-level switch changes nothing for existing data.
+
 For the owner: the defaults (on) are this ruling's choice. If comments or ratings should start off on a new install, only the site default changes.
 
 Written in `behaviour/comments.md` (Switching comments on and off), `behaviour/ratings.md` (Switching ratings on and off); `feedback.settings.*`, `page.feedback.*` and the space field `ratingsEnabled` in `contracts/aerie/openapi.yaml`.
