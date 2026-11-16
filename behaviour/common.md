@@ -21,7 +21,7 @@ This file holds the rules every Data Center compatible operation shares: base pa
 
 This rule is provisional (question Q-0005). The full rules for tokens and sign-in arrive with `identity.md`, which replaces this section.
 
-- HTTP Basic has no place for a sign-in code. When an account has sign-in codes turned on, Basic credentials for it are refused with `401`. This covers codes the user turned on and codes a policy requires. Administrators and the emergency administrator account always have codes and cannot be exempted (question Q-0020), so password Basic is always refused for them.
+- HTTP Basic has no place for a sign-in code. When an account has sign-in codes turned on, Basic credentials for it are refused with `401`. This covers codes the user turned on and codes a policy requires. Administrators always have codes and cannot be exempted (question Q-0020), so password Basic is always refused for them. Password Basic is also always refused for the emergency administrator (break-glass) account, for a different reason: that account never uses sign-in codes, so it has no second factor at all (question Q-0021). The refusal is the same `401`; the audit log records the reason `break-glass`, and administrators are still alerted as for any sign-in to that account.
 - The `401` is the same response a wrong password gives, whether or not the password was right, so Basic cannot be used to check a password while skipping the code. Aerie writes the real reason (codes on) to its audit log.
 - Such accounts call the compatible surface with a personal access token (see `identity.md`) instead.
 - Accounts without sign-in codes, including ones an administrator has exempted, use Basic as described above. Only accounts that are not administrators can be exempted.
