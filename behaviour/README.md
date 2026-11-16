@@ -22,3 +22,5 @@ Planned files, in the order the roadmap needs them:
 Written so far (Data Center T1): `common.md`, `content.md`, `spaces.md`, `search-cql.md`, `attachments.md`, `labels-properties.md` (labels only), `users.md`, `representations.md` (storage format only). Each ends with the open questions the lab should settle.
 
 Identity (Data Center): `identity.md`, with the build plan `identity-plan.md`. It supersedes the provisional sign-in code ruling in `common.md`.
+
+Aerie's own features (not compatible surfaces), each with its lab cases and build slices: `comments.md` (page comments, and the comment and rating switches), `ratings.md` (page ratings), `ai-search.md` (AI answers to questions). Decisions in questions Q-0022 to Q-0032.

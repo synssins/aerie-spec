@@ -549,6 +549,73 @@ paths:
       security:
         - cookieAuth: []
       "x-kb-api-token": "closed"
+  "/api/v1/admin/feedback":
+    get:
+      tags:
+        - "admin"
+      operationId: "feedback.settings.read"
+      description: "Not yet built. Administrators only. Site-wide switches for page comments and page ratings. See behaviour/comments.md."
+      "x-kb-action": "feedback.settings.read"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/FeedbackSettingsDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    put:
+      tags:
+        - "admin"
+      operationId: "feedback.settings.save"
+      description: "Not yet built. Administrators only. Saves the site-wide switches. Off here turns the feature off on every page; spaces and pages cannot turn it back on. See behaviour/comments.md and question Q-0025."
+      "x-kb-action": "feedback.settings.save"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/FeedbackSettingsDto"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/FeedbackSettingsDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/admin/groups":
     get:
       tags:
@@ -3090,6 +3157,157 @@ paths:
                 "$ref": "#/components/schemas/Problem"
       security: []
       "x-kb-api-token": "read"
+  "/api/v1/comments/{id}":
+    put:
+      tags:
+        - "comments"
+      operationId: "comment.edit"
+      description: "Not yet built. The author edits the text, only within 15 minutes of posting (after that 422) and only while the comment is visible. Anyone else gets 403. Question Q-0023. See behaviour/comments.md."
+      "x-kb-action": "comment.edit"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/CommentEditRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/CommentDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    delete:
+      tags:
+        - "comments"
+      operationId: "comment.delete"
+      description: "Not yet built. The author deletes their own comment for good, at any time; a Supervisor or Owner of the space deletes someone else's comment, restorable for 30 days. Question Q-0024. See behaviour/comments.md."
+      "x-kb-action": "comment.delete"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/comments/{id}/hide":
+    post:
+      tags:
+        - "comments"
+      operationId: "comment.hide"
+      description: "Not yet built. Supervisors and Owners of the page's space only. Hides the comment from everyone except moderators and its author. Question Q-0024. See behaviour/comments.md."
+      "x-kb-action": "comment.hide"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/comments/{id}/restore":
+    post:
+      tags:
+        - "comments"
+      operationId: "comment.restore"
+      description: "Not yet built. Supervisors and Owners of the page's space only. Makes a hidden, or moderator-deleted and not yet purged, comment visible again. A comment its author deleted is 404; a visible comment is 409. Question Q-0024. See behaviour/comments.md."
+      "x-kb-action": "comment.restore"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        "409":
+          description: "The comment is already visible. Nothing changes."
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/home":
     get:
       tags:
@@ -4475,6 +4693,102 @@ paths:
         - cookieAuth: []
         - bearerAuth: []
       "x-kb-api-token": "write"
+  "/api/v1/pages/{id}/comments":
+    get:
+      tags:
+        - "comments"
+      operationId: "comment.list"
+      description: "Not yet built. Top-level comments on a page, oldest first, each with its replies; what the caller sees depends on their role. Guests get 401. See behaviour/comments.md."
+      "x-kb-action": "comment.list"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "limit"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+            nullable: true
+        - name: "offset"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+            nullable: true
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/CommentListDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      "x-kb-api-token": "read"
+    post:
+      tags:
+        - "comments"
+      operationId: "comment.create"
+      description: "Not yet built. Posts a comment or a reply (parentId: a visible top-level comment on the same page). 422 when comments are off for the page or the page is a folder; 429 past 10 a minute. See behaviour/comments.md."
+      "x-kb-action": "comment.create"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/CommentRequest"
+      responses:
+        "201":
+          description: "Created"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/CommentDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/pages/{id}/details":
     put:
       tags:
@@ -4792,6 +5106,87 @@ paths:
         - cookieAuth: []
         - bearerAuth: []
       "x-kb-api-token": "read"
+  "/api/v1/pages/{id}/feedback":
+    get:
+      tags:
+        - "pages"
+      operationId: "page.feedback.read"
+      description: "Not yet built. The comment and rating switches for a page at each level (site, space, page) and the effective result. Question Q-0025. See behaviour/comments.md."
+      "x-kb-action": "page.feedback.read"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/PageFeedbackDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    put:
+      tags:
+        - "pages"
+      operationId: "page.feedback.save"
+      description: "Not yet built. Supervisors and Owners of the page's space only. Sets the page-level switches; a page can only turn a feature off, never back on over a higher level. Question Q-0025. See behaviour/comments.md."
+      "x-kb-action": "page.feedback.save"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/PageFeedbackRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/PageFeedbackDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/pages/{id}/format":
     post:
       tags:
@@ -4908,6 +5303,180 @@ paths:
         - cookieAuth: []
         - bearerAuth: []
       "x-kb-api-token": "write"
+  "/api/v1/pages/{id}/ratings":
+    get:
+      tags:
+        - "ratings"
+      operationId: "rating.summary"
+      description: "Not yet built. Positive and solved counts, the caller's own rating, and, for Supervisors and Owners of the space only, the negative count. Guests get 401. See behaviour/ratings.md."
+      "x-kb-action": "rating.summary"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RatingSummaryDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/pages/{id}/ratings/all":
+    get:
+      tags:
+        - "ratings"
+      operationId: "rating.list"
+      description: "Not yet built. Supervisors and Owners of the page's space only; everyone else, site administrators included, gets 403. Every rating with who gave it, when, and the reason, newest change first. Question Q-0029. See behaviour/ratings.md."
+      "x-kb-action": "rating.list"
+      "x-kb-changes-data": false
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "limit"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+            nullable: true
+        - name: "offset"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            format: "int32"
+            nullable: true
+        - name: "value"
+          in: "query"
+          required: false
+          schema:
+            nullable: true
+            allOf:
+              - "$ref": "#/components/schemas/RatingValue"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RatingListDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+  "/api/v1/pages/{id}/ratings/mine":
+    put:
+      tags:
+        - "ratings"
+      operationId: "rating.save"
+      description: "Not yet built. Creates or replaces the caller's rating. solved only with positive, reason only with negative (at most 280 characters), else 400. 422 when ratings are off for the page or the page is a folder; 429 past 30 a minute. Question Q-0028. See behaviour/ratings.md."
+      "x-kb-action": "rating.save"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/RatingRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/RatingSummaryDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
+    delete:
+      tags:
+        - "ratings"
+      operationId: "rating.remove"
+      description: "Not yet built. Removes the caller's rating, also while ratings are off. 204 also when there was none. See behaviour/ratings.md."
+      "x-kb-action": "rating.remove"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "No content"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/pages/{id}/restore":
     post:
       tags:
@@ -5189,6 +5758,49 @@ paths:
                 "$ref": "#/components/schemas/Problem"
       security: []
       "x-kb-api-token": "read"
+  "/api/v1/search/answer":
+    post:
+      tags:
+        - "search"
+      operationId: "search.answer"
+      description: "Not yet built. AI search: answers a question from pages the caller may read, with links to the pages used. Behind the AI feature search (In-depth search), off until an Admin turns it on; 403 when not available to the caller. Sensitive spaces never reach the model. 429 past the per-person AI limit, 503 when the model fails. See behaviour/ai-search.md and questions Q-0030 to Q-0032."
+      "x-kb-action": "search.answer"
+      "x-kb-changes-data": true
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      requestBody:
+        required: true
+        content:
+          "application/json":
+            schema:
+              "$ref": "#/components/schemas/SearchAnswerRequest"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            "application/json":
+              schema:
+                "$ref": "#/components/schemas/SearchAnswerDto"
+        "401":
+          description: "Not signed in, or a bad token"
+        "403":
+          description: "Not allowed"
+        "503":
+          description: "The configured model failed or did not answer in time."
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+        default:
+          description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
+      security:
+        - cookieAuth: []
+      "x-kb-api-token": "closed"
   "/api/v1/setup":
     post:
       tags:
@@ -6545,6 +7157,107 @@ components:
       properties:
         exempt:
           type: "boolean"
+    CommentDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        pageId:
+          type: "string"
+          format: "uuid"
+        parentId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+        author:
+          nullable: true
+          description: "Null in a placeholder for a hidden or deleted comment shown to readers."
+          allOf:
+            - "$ref": "#/components/schemas/OwnerRefDto"
+        text:
+          type: "string"
+          nullable: true
+          description: "Plain text, at most 4000 characters. Null in a placeholder."
+        createdAt:
+          type: "string"
+          format: "date-time"
+        editedAt:
+          type: "string"
+          format: "date-time"
+          nullable: true
+        state:
+          "$ref": "#/components/schemas/CommentState"
+        canEdit:
+          type: "boolean"
+        canDelete:
+          type: "boolean"
+        canModerate:
+          type: "boolean"
+        replies:
+          type: "array"
+          description: "Top-level comments only: their replies, oldest first. Empty on replies."
+          items:
+            "$ref": "#/components/schemas/CommentDto"
+    CommentEditRequest:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        text:
+          type: "string"
+          maxLength: 4000
+    CommentListDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        enabled:
+          type: "boolean"
+        canComment:
+          type: "boolean"
+        canModerate:
+          type: "boolean"
+        total:
+          type: "integer"
+          format: "int32"
+        limit:
+          type: "integer"
+          format: "int32"
+        offset:
+          type: "integer"
+          format: "int32"
+        comments:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/CommentDto"
+    CommentRequest:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        text:
+          type: "string"
+          maxLength: 4000
+        parentId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+    CommentState:
+      type: "string"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      enum:
+        - "visible"
+        - "hidden"
+        - "deleted"
     CompatAuthSettingsDto:
       type: "object"
       "x-aerie-status": "planned"
@@ -6735,6 +7448,31 @@ components:
       properties:
         reason:
           type: "string"
+    FeedbackLevelsDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        site:
+          type: "boolean"
+        space:
+          type: "boolean"
+        page:
+          type: "boolean"
+        effective:
+          type: "boolean"
+          description: "On only if site, space and page are all on."
+    FeedbackSettingsDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        commentsEnabled:
+          type: "boolean"
+        ratingsEnabled:
+          type: "boolean"
     FileStoreField:
       type: "object"
       properties:
@@ -7382,6 +8120,10 @@ components:
           items:
             type: "string"
           nullable: true
+        aiSearch:
+          type: "boolean"
+          description: "Not yet built. True when AI search (search.answer) is available to this person. See behaviour/ai-search.md."
+          "x-aerie-status": "planned"
     MoveRequest:
       type: "object"
       properties:
@@ -7715,6 +8457,28 @@ components:
         aiFlag:
           type: "string"
           nullable: true
+    PageFeedbackDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        comments:
+          "$ref": "#/components/schemas/FeedbackLevelsDto"
+        ratings:
+          "$ref": "#/components/schemas/FeedbackLevelsDto"
+    PageFeedbackRequest:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        commentsEnabled:
+          type: "boolean"
+          nullable: true
+        ratingsEnabled:
+          type: "boolean"
+          nullable: true
     PageKind:
       type: "string"
       enum:
@@ -8000,6 +8764,118 @@ components:
               type: "string"
         traceId:
           type: "string"
+    RatingDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        value:
+          "$ref": "#/components/schemas/RatingValue"
+        solved:
+          type: "boolean"
+        reason:
+          type: "string"
+          nullable: true
+        version:
+          type: "string"
+        createdAt:
+          type: "string"
+          format: "date-time"
+        updatedAt:
+          type: "string"
+          format: "date-time"
+    RatingEntryDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        user:
+          "$ref": "#/components/schemas/OwnerRefDto"
+        value:
+          "$ref": "#/components/schemas/RatingValue"
+        solved:
+          type: "boolean"
+        reason:
+          type: "string"
+          nullable: true
+        version:
+          type: "string"
+        createdAt:
+          type: "string"
+          format: "date-time"
+        updatedAt:
+          type: "string"
+          format: "date-time"
+    RatingListDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        total:
+          type: "integer"
+          format: "int32"
+        limit:
+          type: "integer"
+          format: "int32"
+        offset:
+          type: "integer"
+          format: "int32"
+        ratings:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/RatingEntryDto"
+    RatingRequest:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        value:
+          "$ref": "#/components/schemas/RatingValue"
+        solved:
+          type: "boolean"
+          nullable: true
+        reason:
+          type: "string"
+          nullable: true
+          maxLength: 280
+    RatingSummaryDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        enabled:
+          type: "boolean"
+        canRate:
+          type: "boolean"
+        canSeeAll:
+          type: "boolean"
+        positive:
+          type: "integer"
+          format: "int32"
+        solved:
+          type: "integer"
+          format: "int32"
+        negative:
+          type: "integer"
+          format: "int32"
+          description: "Present only when canSeeAll is true."
+        mine:
+          nullable: true
+          allOf:
+            - "$ref": "#/components/schemas/RatingDto"
+    RatingValue:
+      type: "string"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      enum:
+        - "positive"
+        - "negative"
     RecentPageDto:
       type: "object"
       properties:
@@ -8122,6 +8998,65 @@ components:
           items:
             type: "string"
           nullable: true
+    SearchAnswerDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        outcome:
+          "$ref": "#/components/schemas/SearchAnswerOutcome"
+        answer:
+          type: "string"
+          description: "Plain text. The model's text for answered; aerie's fixed text otherwise."
+        sources:
+          type: "array"
+          items:
+            "$ref": "#/components/schemas/SearchAnswerSourceDto"
+    SearchAnswerOutcome:
+      type: "string"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      enum:
+        - "answered"
+        - "no_answer"
+        - "nothing_found"
+    SearchAnswerRequest:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        question:
+          type: "string"
+          minLength: 3
+          maxLength: 500
+        spaceId:
+          type: "string"
+          format: "uuid"
+          nullable: true
+    SearchAnswerSourceDto:
+      type: "object"
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        n:
+          type: "integer"
+          format: "int32"
+        pageId:
+          type: "string"
+          format: "uuid"
+        title:
+          type: "string"
+        spaceId:
+          type: "string"
+          format: "uuid"
+        spaceName:
+          type: "string"
+        url:
+          type: "string"
     SearchHitDto:
       type: "object"
       properties:
@@ -8242,6 +9177,10 @@ components:
           nullable: true
         commentsEnabled:
           type: "boolean"
+        ratingsEnabled:
+          type: "boolean"
+          description: "Not yet built. Space-level switch for page ratings, next to commentsEnabled. See behaviour/ratings.md and question Q-0025."
+          "x-aerie-status": "planned"
         agingDays:
           type: "integer"
           format: "int32"
@@ -8565,6 +9504,11 @@ components:
         commentsEnabled:
           type: "boolean"
           nullable: true
+        ratingsEnabled:
+          type: "boolean"
+          nullable: true
+          description: "Not yet built. Space-level switch for page ratings. See behaviour/ratings.md and question Q-0025."
+          "x-aerie-status": "planned"
         agingDays:
           type: "integer"
           format: "int32"
