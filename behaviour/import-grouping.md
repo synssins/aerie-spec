@@ -2,7 +2,7 @@
 
 Sources: L-0025
 
-Aerie's own feature, not a vendor-compatible surface. It extends aerie's existing AI import (the `import.*` calls in the as-is contract: a batch, files dropped into it, one draft per document, and a review where each draft is accepted, rejected or merged). When many files are imported at once, for example a whole old file share dragged in, aerie suggests tags for each document, groups documents about the same system, and, where several files say almost the same thing, proposes one merged page. Every rule here is aerie's own design. The decisions behind the details are questions Q-0033 to Q-0038.
+Aerie's own feature, not a vendor-compatible surface. It extends aerie's existing AI import (the `import.*` calls in the as-is contract: a batch, files dropped into it, one draft per document, and a review where each draft is accepted, rejected or merged). When many files are imported at once, for example a whole old file share dragged in, aerie suggests tags for each document, groups documents about the same system, and, where several files say almost the same thing, proposes one merged page. Every rule here is aerie's own design. The decisions behind the details are questions Q-0033 to Q-0038 and Q-0041.
 
 New calls and fields are in `contracts/aerie/openapi.yaml`, marked `x-aerie-status: planned`. They follow the as-is conventions (problem bodies, `401`, `403`, `404` for what the caller cannot see, `409` for a state conflict, `422` refused by a rule, `429`), and each call runs through the action pipeline under its `x-kb-action` name.
 
@@ -37,8 +37,8 @@ Question Q-0038. While drafting each document, the model also suggests up to 8 t
 
 - An `application` (or `system`) tag that names an application in the inventory is linked to it (`applicationId`), and the draft's "applies to" suggests that application.
 - A `server` tag that names a server in an inventory install is linked to that application and server.
-- A tag that equals an existing page tag reuses that tag's spelling (`existing: true`).
-- Anything else is a new tag (`existing: false`), cleaned to aerie's tag rules; one that cannot be made valid is dropped.
+- A tag that equals an existing page tag, ignoring case, spaces, hyphens and underscores, reuses that tag's spelling (`existing: true`).
+- Anything else is a new tag (`existing: false`), cleaned to aerie's existing tag rules (question Q-0041): trimmed, lower case, runs of spaces collapsed to one, 1 to 50 characters, no commas. Spaces are allowed and are never turned into hyphens, so "Month End" becomes `month end`. A tag that still breaks these rules after cleaning (empty, longer than 50 characters, or holding a comma) is dropped.
 
 The reviewer sees the suggestions on each draft (`ImportItemDto.suggestedTags`) and keeps, removes or adds tags before accepting, as with any draft. Suggested tags are not saved anywhere until the draft is accepted.
 
@@ -95,8 +95,8 @@ Group and merge actions write audit entries (`import.group.remove`, `import.grou
 
 The lab points the AI settings at its stub model, which records requests and answers what each case scripts. Fixture "old share": five versions of a Payroll runbook (written 2016, 2018, 2020, 2022, 2024; office files with document dates), a Payroll interface note that shares little text with them, and two documents about an unrelated system. The inventory has the application Payroll with server PAY-01. An existing page tag `payroll` exists.
 
-- `import.group.tags`: the stub tags a runbook `Payroll` (application), `PAY-01` (server), `month end` (topic). The draft's `suggestedTags` link the first to the inventory application and the second to the server, reuse the existing spelling `payroll`, and mark `month-end` new.
-- `import.group.tags.invalid`: a suggested tag that cannot be made valid is dropped; more than 8 suggestions keep the first 8.
+- `import.group.tags`: the stub tags a runbook `Payroll` (application), `PAY-01` (server), `Month  End` (topic). The draft's `suggestedTags` link the first to the inventory application and the second to the server, reuse the existing spelling `payroll`, and mark `month end` new (lower case, one space, no hyphen).
+- `import.group.tags.invalid`: a suggested tag that holds a comma or is longer than 50 characters after cleaning is dropped; more than 8 suggestions keep the first 8.
 - `import.group.formed`: after all drafts finish, one group holds the five runbooks and the interface note with a reason naming Payroll and the inventory; the unrelated documents are not in it.
 - `import.group.waits`: while any draft is still working, the batch has no groups.
 - `import.group.max`: twelve documents sharing one application tag give a group of 10 and two ungrouped documents.
