@@ -23,4 +23,4 @@ Written so far (Data Center T1): `common.md`, `content.md`, `spaces.md`, `search
 
 Identity (Data Center): `identity.md`, with the build plan `identity-plan.md`. It supersedes the provisional sign-in code ruling in `common.md`.
 
-Aerie's own features (not compatible surfaces), each with its lab cases and build slices: `comments.md` (page comments, and the comment and rating switches), `ratings.md` (page ratings), `ai-search.md` (AI answers to questions), `import-grouping.md` (related documents in the AI import: tags, groups, merge proposals). Decisions in questions Q-0022 to Q-0039.
+Aerie's own features (not compatible surfaces), each with its lab cases and build slices: `comments.md` (page comments, and the comment and rating switches), `ratings.md` (page ratings), `ai-search.md` (AI answers to questions), `import-grouping.md` (related documents in the AI import: tags, groups, merge proposals), `page-format.md` (format: cutting run-together items, spelling and grammar fixes). Decisions in questions Q-0022 to Q-0039.

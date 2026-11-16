@@ -7714,6 +7714,17 @@ components:
           items:
             "$ref": "#/components/schemas/FormatRoleDto"
           nullable: true
+    FormatFixDto:
+      type: "object"
+      description: "One spelling or grammar correction. See behaviour/page-format.md."
+      "x-aerie-status": "planned"
+      "x-aerie-sources":
+        - "L-0025"
+      properties:
+        from:
+          type: "string"
+        to:
+          type: "string"
     FormatRemovedDto:
       type: "object"
       properties:
@@ -7751,6 +7762,20 @@ components:
           format: "int32"
         role:
           type: "string"
+        split:
+          type: "array"
+          description: "Not yet built. Only for role paragraph: the exact text each run-together item after the first starts with. The paragraph is cut there; a cut not found at a word start is ignored. See behaviour/page-format.md."
+          "x-aerie-status": "planned"
+          items:
+            type: "string"
+          nullable: true
+        fix:
+          type: "array"
+          description: "Not yet built. Spelling and grammar corrections in this part. A correction that changes content refuses the whole result (422, audited as content-changed). Never made in code, double-quoted text or identifier-like words. See behaviour/page-format.md."
+          "x-aerie-status": "planned"
+          items:
+            "$ref": "#/components/schemas/FormatFixDto"
+          nullable: true
     GrantRoleRequest:
       type: "object"
       properties:
