@@ -2591,6 +2591,7 @@ paths:
       tags:
         - "admin"
       operationId: "user.codes.exempt"
+      description: "Exempts an account that is not an administrator from sign-in codes, or ends the exemption. Administrators and the emergency administrator account cannot be exempted: `exempt: true` for one answers 409. See behaviour/identity.md (Accounts with sign-in codes) and question Q-0020."
       "x-kb-action": "user.codes.exempt"
       "x-kb-changes-data": true
       parameters:
@@ -2613,6 +2614,12 @@ paths:
           description: "Not signed in, or a bad token"
         "403":
           description: "Not allowed"
+        "409":
+          description: "The account is an administrator or the emergency administrator account; an administrator always uses codes. Nothing changes."
+          content:
+            "application/problem+json":
+              schema:
+                "$ref": "#/components/schemas/Problem"
         default:
           description: "A refusal: a problem body (RFC 9457) with the status of the answer. 400 a field is wrong, 404 not found or not visible to the caller, 409 a conflict, 422 refused by a rule, 423 locked by a disabled enforcing plugin, 429 too many calls"
           content:

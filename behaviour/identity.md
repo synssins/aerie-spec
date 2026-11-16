@@ -63,6 +63,7 @@ Aerie requires administrators to use time-based sign-in codes, and other users m
 - **Token in Basic, codes on:** accepted. A token was created inside a session that already passed the code, so it is the intended route for such accounts.
 - **Bearer tokens and OAuth:** unaffected by codes. The OAuth sign-in step (below) runs aerie's normal sign-in, including the code.
 - Accounts without codes, including those an administrator exempted (`/api/v1/admin/users/{id}/codes/exempt`), may use the password in Basic.
+- Administrators and aerie's emergency administrator (break-glass) account cannot be exempted (question Q-0020). Exempting one answers `409`, and nothing changes. An exemption has no effect while the account is an administrator: an exempted user who is made an administrator must use codes, so password Basic is refused for them from then on. Only accounts that are not administrators can be exempted.
 - Administrators can turn off password Basic for everyone with a site setting (aerie's choice, default on). Token Basic is not affected.
 
 ### Failed Basic attempts
