@@ -14,7 +14,7 @@ Each imported document gets suggested tags (system, application, server, topic),
 ## Answer
 
 - The model suggests up to 8 tags per document, each with a kind, in the same call that drafts the document.
-- Aerie matches them, ignoring case and spacing: application or system names to inventory applications (linked by id, and suggested in "applies to"), server names to servers in inventory installs, and anything equal to an existing page tag to that tag's spelling. Others are new tags, cleaned to aerie's tag rules, or dropped if they cannot be.
+- Aerie matches them, ignoring case and spacing: application or system names to inventory applications (linked by id, and suggested in "applies to"), server names to servers in inventory installs, and anything equal to an existing page tag to that tag's spelling. Others are new tags, cleaned to aerie's tag rules, or dropped if they cannot be. (The cleaning rules are stated in question Q-0041.)
 - Suggestions are shown on the draft and saved only when the reviewer accepts it, as edited.
 - The inventory is only read. The import never creates inventory applications or servers.
 
