@@ -57,7 +57,8 @@ A model that fails or exceeds `timeoutSeconds` gives `503`; nothing is retried a
 
 ## Limits
 
-- Each person's calls count against the existing per-person AI limit (`userPerMinute`) and the site's model-token limit (`tokenPerMinute`) in the AI settings, shared with aerie's other AI features (question Q-0032). Past either limit: `429` with `Retry-After`, without calling the model.
+- Each person's calls count against the existing per-person AI limit (`userPerMinute`) in the AI settings, through the same limiter as aerie's other AI features (questions Q-0032 and Q-0040). Past the limit: `429` with `Retry-After`, without calling the model.
+- The per-API-token AI limit (`tokenPerMinute`, AI calls a minute per API token) never applies: AI search refuses API tokens. Aerie has no site-wide limit on model tokens, and AI search adds none.
 - Calls with `outcome: nothing_found` count too.
 
 ## Audit
